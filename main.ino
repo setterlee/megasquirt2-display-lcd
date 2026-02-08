@@ -12,6 +12,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 #define OILP_PIN A1
 #define OILT_PIN A2
 #define BAT_PIN  A3
+#define AIRT_PIN A6
 
 // ---------- Timing ----------
 const unsigned long UPDATE_INTERVAL   = 250;
@@ -44,12 +45,14 @@ Page currentPage = PAGE_MAIN;
 float boostBar = 0;
 float oilPressure = 0;
 float oilTemp = 0;
+float airTemp = 0;
 float batteryVolt = 0;
 
 // ---------- Min / Max ----------
 float boostMin, boostMax;
 float oilPMin,  oilPMax;
 float oilTMin,  oilTMax;
+float airTMin,  airTMax;
 float batMin,   batMax;
 
 // ---------- Test ----------
@@ -57,8 +60,8 @@ float testStep = 0;
 bool testUp = true;
 
 void resetAllPeaks() {
-  boostMin = oilPMin = oilTMin = batMin =  999;
-  boostMax = oilPMax = oilTMax = batMax = -999;
+  boostMin = oilPMin = oilTMin = airTMin = batMin =  999;
+  boostMax = oilPMax = oilTMax = airTMax = batMax = -999;
 }
 
 // ---------- SETUP ----------
@@ -191,6 +194,7 @@ void updateTestValues() {
     boostBar    = -0.6 + testStep * 1.8;
     oilPressure =  1.0 + testStep * 4.0;
     oilTemp     = 60  + testStep * 50;
+    airTemp     = 10  + testStep * 60;
     batteryVolt = 12.0 + testStep * 1.8;
   }
 }
@@ -200,6 +204,7 @@ void readRealSensors() {
   boostBar    = map(analogRead(MAP_PIN),  0, 1023, -100, 120) / 100.0;
   oilPressure = map(analogRead(OILP_PIN), 0, 1023, 0, 600) / 100.0;
   oilTemp     = map(analogRead(OILT_PIN), 0, 1023, 20, 140);
+  airTemp     = map(analogRead(AIRT_PIN), 0, 1023, -10, 80);
   batteryVolt = map(analogRead(BAT_PIN),  0, 1023, 0, 200) / 10.0;
 }
 
@@ -213,6 +218,9 @@ void updatePeaks() {
 
   oilTMin  = min(oilTMin, oilTemp);
   oilTMax  = max(oilTMax, oilTemp);
+
+  airTMin  = min(airTMin, airTemp);
+  airTMax  = max(airTMax, airTemp);
 
   batMin   = min(batMin, batteryVolt);
   batMax   = max(batMax, batteryVolt);
@@ -247,7 +255,9 @@ void drawScreen() {
     float mapDisplay = usePSI ? boostBar * 14.5038 : boostBar;
     if (boostBar >= 0) lcd.print("+");
     lcd.print(mapDisplay, 1);
-    lcd.print(usePSI ? "p   " : "b   ");
+    lcd.print(usePSI ? "p " : "b ");
+    lcd.print((int)airTemp);
+    lcd.print("C ");
 
     lcd.setCursor(0, 1);
     lcd.print("OIL:");
