@@ -18,14 +18,18 @@ const unsigned long UPDATE_INTERVAL   = 250;
 const unsigned long TEST_INTERVAL     = 120;
 const unsigned long PEAK_VIEW_TIME    = 3000;
 const unsigned long LONG_PRESS_TIME   = 1500;
+const unsigned long UNIT_MSG_TIME     = 3000;
 
 // ---------- Estado ----------
 bool testMode = true;
 bool showPeaks = false;
+bool usePSI = false;
+bool showUnitChange = false;
 
 unsigned long lastUpdate = 0;
 unsigned long lastTestStep = 0;
 unsigned long peakViewStart = 0;
+unsigned long unitChangeStart = 0;
 
 // ---------- Páginas ----------
 enum Page {
@@ -94,19 +98,49 @@ void loop() {
       lcd.clear();
     }
 
-    drawScreen();
+    if (showUnitChange && millis() - unitChangeStart > UNIT_MSG_TIME) {
+      showUnitChange = false;
+      lcd.clear();
+    }
+
+    if (!showUnitChange) {
+      drawScreen();
+    }
   }
 }
 
 // ---------- BOTON PAGE ----------
 void handlePageButton() {
   static bool lastState = HIGH;
+  static unsigned long pressStart = 0;
+  static bool longHandled = false;
   bool current = digitalRead(BTN_PAGE);
 
   if (lastState == HIGH && current == LOW) {
+    pressStart = millis();
+    longHandled = false;
+  }
+
+  // Long press: cambiar unidad
+  if (current == LOW && !longHandled &&
+      millis() - pressStart >= LONG_PRESS_TIME) {
+    usePSI = !usePSI;
+    showUnitChange = true;
+    unitChangeStart = millis();
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("UNIT CHANGE:");
+    lcd.setCursor(0, 1);
+    lcd.print(usePSI ? "BAR -> PSI" : "PSI -> BAR");
+    longHandled = true;
+  }
+
+  // Short press: cambiar página
+  if (lastState == LOW && current == HIGH && !longHandled) {
     currentPage = (Page)((currentPage + 1) % PAGE_COUNT);
     lcd.clear();
   }
+
   lastState = current;
 }
 
@@ -191,29 +225,35 @@ void drawScreen() {
   if (showPeaks) {
     if (currentPage == PAGE_MAIN) {
       lcd.print("MAP ");
-      lcd.print(boostMin, 1);
+      float mapMinDisplay = usePSI ? boostMin * 14.5038 : boostMin;
+      float mapMaxDisplay = usePSI ? boostMax * 14.5038 : boostMax;
+      lcd.print(mapMinDisplay, 1);
       lcd.print("/");
-      lcd.print(boostMax, 1);
+      lcd.print(mapMaxDisplay, 1);
       lcd.setCursor(0, 1);
       lcd.print("OIL ");
-      lcd.print(oilPMin, 1);
+      float oilMinDisplay = usePSI ? oilPMin * 14.5038 : oilPMin;
+      float oilMaxDisplay = usePSI ? oilPMax * 14.5038 : oilPMax;
+      lcd.print(oilMinDisplay, 1);
       lcd.print("/");
-      lcd.print(oilPMax, 1);
-      lcd.print("b");
+      lcd.print(oilMaxDisplay, 1);
+      lcd.print(usePSI ? "p" : "b");
     }
     return;
   }
 
   if (currentPage == PAGE_MAIN) {
     lcd.print("MAP:");
+    float mapDisplay = usePSI ? boostBar * 14.5038 : boostBar;
     if (boostBar >= 0) lcd.print("+");
-    lcd.print(boostBar, 1);
-    lcd.print("b   ");
+    lcd.print(mapDisplay, 1);
+    lcd.print(usePSI ? "p   " : "b   ");
 
     lcd.setCursor(0, 1);
     lcd.print("OIL:");
-    lcd.print(oilPressure, 1);
-    lcd.print("b ");
+    float oilDisplay = usePSI ? oilPressure * 14.5038 : oilPressure;
+    lcd.print(oilDisplay, 1);
+    lcd.print(usePSI ? "p " : "b ");
     lcd.print((int)oilTemp);
     lcd.print("C ");
   }
