@@ -62,7 +62,7 @@ private:
       setValue(VALUE_COOLANT_TEMP, 65.0);              // Motor frío (< 85°C)
       setValue(VALUE_OIL_TEMP, 70.0);                  // Aceite frío (< 85°C)
       setValue(VALUE_TPS, 60.0 + testStep * 200);     // TPS sube a > 50%
-      setValue(VALUE_MAP, 3.0 + testStep * 50);       // MAP sube a > 5 PSI
+      setValue(VALUE_MAP, 80.0 + testStep * 100);     // MAP 80-100 kPa (boost bajo)
       setValue(VALUE_OIL_PRESSURE, 25.0);
       setValue(VALUE_RPM, 2500.0);
       // ⚠️ ALERTA: COLD_ENGINE_HIGH_LOAD debe activarse
@@ -74,7 +74,7 @@ private:
       setValue(VALUE_COOLANT_TEMP, 90.0);
       setValue(VALUE_OIL_TEMP, 100.0);
       setValue(VALUE_TPS, 30.0);
-      setValue(VALUE_MAP, -2.0);
+      setValue(VALUE_MAP, 50.0);                       // MAP 50 kPa (vacío parcial)
       // 🚨 ALERTA CRÍTICA: LOW_OIL_PRESSURE debe activarse
     }
     // CASO DE PRUEBA 3: Temperaturas combinadas altas (testStep 0.4-0.6)
@@ -84,7 +84,7 @@ private:
       setValue(VALUE_OIL_PRESSURE, 35.0);
       setValue(VALUE_RPM, 3500.0);
       setValue(VALUE_TPS, 45.0);
-      setValue(VALUE_MAP, 2.0);
+      setValue(VALUE_MAP, 70.0);                       // MAP 70 kPa (carga moderada)
       // 🚨 ALERTA CRÍTICA: HIGH_TEMP_COMBO debe activarse
     }
     // CASO DE PRUEBA 4: Operación normal (testStep 0.6-1.0)
@@ -94,7 +94,7 @@ private:
       setValue(VALUE_OIL_PRESSURE, 25.0 + testStep * 30.0);   // 25-55 PSI normal
       setValue(VALUE_RPM, 1500.0 + testStep * 3000.0);        // 1500-4500 RPM
       setValue(VALUE_TPS, testStep * 40.0);                   // 0-40% TPS moderado
-      setValue(VALUE_MAP, -5.0 + testStep * 15.0);            // -5 a +10 PSI
+      setValue(VALUE_MAP, 40.0 + testStep * 100.0);           // 40-140 kPa (vacío a boost moderado)
       // ✅ Sin alertas: todo en rangos normales
     }
 
@@ -103,6 +103,7 @@ private:
     setValue(VALUE_BATTERY, 13.5 + testStep * 1.0);
     setValue(VALUE_AFR, 13.5 + testStep * 2.0);
     setValue(VALUE_IGNITION, 15.0 + testStep * 20.0);
+    setValue(VALUE_DWELL, 2.5 + testStep * 3.0);           // 2.5 a 5.5 ms (ralentí a alta carga)
     setValue(VALUE_FUEL_PRESSURE, 40.0 + testStep * 10.0);
     setValue(VALUE_PULSE_WIDTH, 3.0 + testStep * 6.0);
     

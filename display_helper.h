@@ -13,27 +13,18 @@ class DisplayHelper {
 private:
   LiquidCrystal_I2C* lcd;
   DataManager* dataManager;
-  bool usePSI;
 
-  // Convertir valor según unidad seleccionada
+  // Ya no hay conversión - cada sensor usa su unidad de VALUE_CONFIGS
   float convertValue(float value, Unit unit) {
-    if (unit == UNIT_BAR && usePSI) {
-      // Convertir BAR a PSI
-      return value * 14.5038;
-    }
-    if (unit == UNIT_PSI && !usePSI) {
-      // Convertir PSI a BAR
-      return value / 14.5038;
-    }
-    return value;
+    return value; // Retornar tal cual, sin conversión
   }
 
-  // Obtener label de unidad
+  // Obtener label de unidad según VALUE_CONFIGS
   const char* getUnitLabel(Unit unit) {
-    if (unit == UNIT_BAR || unit == UNIT_PSI) {
-      return usePSI ? "p" : "b";
-    }
     switch (unit) {
+      case UNIT_PSI:        return "p";
+      case UNIT_BAR:        return "b";
+      case UNIT_KPA:        return "k";
       case UNIT_CELSIUS:    return "C";
       case UNIT_FAHRENHEIT: return "F";
       case UNIT_VOLT:       return "V";
@@ -114,7 +105,6 @@ public:
   DisplayHelper(LiquidCrystal_I2C* lcdPtr, DataManager* dmPtr) {
     lcd = lcdPtr;
     dataManager = dmPtr;
-    usePSI = USE_PSI_DEFAULT;
   }
 
   // Inicializar LCD
@@ -130,7 +120,19 @@ public:
     lcd->print(BOOT_MSG_LINE1);
     lcd->setCursor(0, 1);
     lcd->print(BOOT_MSG_LINE2);
-    delay(BOOT_DELAY);
+    delay(BOOT_DELAY / 2);
+    
+    // Mostrar estado de alertas
+    lcd->clear();
+    lcd->setCursor(0, 0);
+    lcd->print(F("ALERTS:"));
+    lcd->setCursor(0, 1);
+#if ENABLE_ALERTS
+    lcd->print(F("ENABLED"));
+#else
+    lcd->print(F("DISABLED"));
+#endif
+    delay(BOOT_DELAY / 2);
     lcd->clear();
   }
 
@@ -200,24 +202,18 @@ public:
     }
   }
 
-  // Toggle unit (BAR <-> PSI)
+  // Toggle unit - ahora solo muestra info, no convierte
   void toggleUnit() {
-    usePSI = !usePSI;
     lcd->clear();
     lcd->setCursor(0, 0);
-    lcd->print(F("UNIT CHANGE:"));
+    lcd->print(F("UNITS:"));
     lcd->setCursor(0, 1);
-    lcd->print(usePSI ? F("BAR -> PSI") : F("PSI -> BAR"));
+    lcd->print(F("From configs"));
   }
 
   // Clear display
   void clear() {
     lcd->clear();
-  }
-
-  // Get current unit mode
-  bool isPSI() {
-    return usePSI;
   }
   
   // Control de backlight

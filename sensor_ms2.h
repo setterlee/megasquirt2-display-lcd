@@ -82,11 +82,9 @@ private:
   float parseValue(ValueType type) {
     switch (type) {
       case VALUE_MAP: {
-        // MAP en kPa * 10, convertir a PSI
+        // MAP en kPa * 10 desde MS2, devolver en kPa
         uint16_t kpa10 = readWord(MS2_MAP_MSB);
-        float kpa = kpa10 / 10.0;
-        float bar = kpa / 100.0;
-        return bar * 14.5038; // Convertir a PSI
+        return kpa10 / 10.0; // Devolver en kPa directamente
       }
       
       case VALUE_AIR_TEMP: {
@@ -133,11 +131,11 @@ private:
       }
       
       case VALUE_FUEL_PRESSURE: {
-        // Fuel pressure en kPa * 10, convertir a PSI
+        // Fuel pressure en kPa * 10 desde MS2
         uint16_t kpa10 = readWord(MS2_FUELPRES_MSB);
         float kpa = kpa10 / 10.0;
-        float bar = kpa / 100.0;
-        return bar * 14.5038; // Convertir a PSI
+        // Convertir a PSI (unidad base para fuel pressure)
+        return kpa / 6.89476; // kPa a PSI
       }
       
       case VALUE_PULSE_WIDTH: {

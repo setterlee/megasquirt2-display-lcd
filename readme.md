@@ -1,17 +1,23 @@
 # Lancer Custom Monitor – Arduino UNO + LCD I2C
 
-Monitor auxiliar retro para Mitsubishi Lancer basado en **Arduino UNO** y **LCD 16x2 I2C**, pensado para uso automotriz real:
-- discreto
-- rápido de leer
-- sin llenar el tablero de relojes
+Monitor auxiliar retro para Mitsubishi Lancer 1993 basado en **Arduino UNO** y **LCD 16x2 I2C**, diseñado para uso automotriz real:
+- 🎯 Discreto y minimalista
+- ⚡ Rápido de leer durante la conducción
+- 📊 6 páginas especializadas desde perspectiva de tuner
+- 🔧 Sin llenar el tablero de relojes
 
-Incluye:
-- paginación por botón
-- registro de mínimos y máximos (MIN / MAX)
-- modo TEST para validación sin motor
-- **arquitectura modular y configurable**
-- **comunicación con MegaSquirt 2**
-- **sensores directos + MS2 unificados**
+**Características principales:**
+- ✅ Arquitectura modular y configurable (8 archivos)
+- ✅ Comunicación con MegaSquirt 2 (9600 baud, 75 bytes)
+- ✅ Sensores directos analógicos + MS2 unificados
+- ✅ 19 sensores/valores configurados (incluye 7 engine status flags)
+- ✅ Paginación por botón (6 páginas: Daily, Performance, Health, Fuel, Cold Start, Advanced)
+- ✅ Registro de MIN/MAX con reset
+- ✅ Cambio de unidades PSI ↔ BAR ↔ kPa (long press)
+- ✅ Sistema de alertas (7 simples + 3 compuestas) con LCD blink inteligente
+- ✅ Modo TEST con 4 escenarios (cold start, low oil, overheating, normal)
+- ✅ Optimización PROGMEM (~640 bytes de RAM ahorrados, uso 44%)
+- ✅ Test values completos para DWELL (2.5-5.5ms)
 
 ---
 
@@ -54,10 +60,18 @@ ms2-display/
 ```
 
 ### Filosofía de diseño
-- **Configuración centralizada**: Todo se define en `config.h`
+- **Configuración centralizada**: Todo se define en `config.h` con PROGMEM
 - **Fuentes de datos intercambiables**: Cada valor puede venir de sensor directo o MS2
-- **Páginas customizables**: Agregar/modificar páginas sin tocar código
+- **Páginas customizables**: 6 páginas especializadas para diferentes escenarios de conducción
 - **Extensible**: Fácil agregar nuevos sensores o protocolos (CAN, ESP32, etc.)
+- **Optimizado para Arduino UNO**: Uso de memoria RAM ~44% (PROGMEM para strings/configs)
+
+### Optimizaciones de memoria
+- Labels en PROGMEM: 19 sensores × ~4 bytes = ~76 bytes guardados
+- VALUE_CONFIGS en PROGMEM: 19 × 32 bytes = ~608 bytes guardados
+- PAGES en PROGMEM: 6 páginas × ~64 bytes = ~384 bytes guardados
+- Alert messages en PROGMEM: 14 mensajes × ~16 bytes = ~224 bytes guardados
+- **Total ahorrado: ~640 bytes** (de 2048 RAM disponible → reducido a ~900 bytes de uso)
 
 ---
 
@@ -235,7 +249,7 @@ Leídos por protocolo serial (9600 baud):
 
 | Valor | Label | Rango | Unidad | Descripción |
 |-------|-------|-------|--------|-------------|
-| MAP | MAP | -14.5 a 30 PSI | PSI | Presión absoluta (boost/vacío) |
+| MAP | MAP | -14.5 a 30 PSI | PSI/BAR/kPa | Presión absoluta (boost/vacío) |
 | Air Temp (IAT) | IAT | -10 a 80°C | Celsius | Temperatura aire admisión |
 | Coolant Temp | CLT | 20 a 120°C | Celsius | Temperatura refrigerante |
 | RPM | RPM | 0-8000 | RPM | Revoluciones por minuto |
@@ -243,9 +257,8 @@ Leídos por protocolo serial (9600 baud):
 | AFR | AFR | 10.0-20.0 | Ratio | Relación aire/combustible |
 | Ignition | IGN | -10 a 50 | Grados | Avance de ignición |
 | Dwell | DWL | 0-10 | ms | Tiempo de carga bobina |
-| Fuel Pressure | FUP | 0-100 | PSI | Presión de combustible |
+| Fuel Pressure | FUP | 0-100 | PSI/BAR/kPa | Presión de combustible |
 | Pulse Width | PW1 | 0-25.5 | ms | Duración inyección |
-| Engine Status | STA | - | Flags | Estado del motor (ver abajo) |
 
 ### Engine Status Flags
 El valor `ENGINE_STATUS` decodifica el byte de estado del MS2 mostrando indicadores activos:
@@ -431,8 +444,24 @@ MODE:TEST
 ---
 
 ### Botón PAGE
-- Click corto → cambia de página
-- Click largo (≥1.5 s) → cambia unidad BAR ↔ PSI
+- Click corto → cambia de página (6 páginas disponibles)
+- Click largo (≥1.5 s) → cambia unidad de presión: **PSI → BAR → kPa** (cicla)
+
+**Páginas disponibles:**
+1. **DAILY DRIVING** - MAP/IAT + Oil pressure/temp (uso diario)
+2. **PERFORMANCE** - RPM/TPS + AFR/Ignition (en pista)
+3. **ENGINE HEALTH** - Coolant/Oil temp + Oil pressure/Battery
+4. **FUEL SYSTEM** - Fuel pressure/Pulse width + MAP/AFR
+5. **COLD START** - ASE/WUE flags + Coolant/PW
+6. **ADVANCED TUNING** - RPM/Dwell + Ignition/Coolant
+
+### Unidades de presión
+El sistema soporta 3 unidades intercambiables para sensores de presión:
+- **PSI** (libras por pulgada cuadrada) - default
+- **BAR** (bares) - 1 BAR = 14.5038 PSI
+- **kPa** (kilopascales) - 1 PSI = 6.89476 kPa, 1 BAR = 100 kPa
+
+Las unidades se configuran individualmente en `VALUE_CONFIGS[]` pero se pueden cambiar en runtime con el botón.
 
 ---
 

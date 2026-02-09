@@ -58,7 +58,7 @@ const char label_FSH[] PROGMEM = "FSH";
 // Configuración de cada valor disponible
 const ValueConfig VALUE_CONFIGS[] PROGMEM PROGMEM = {
   // type              source          label      unit          pin  minRaw maxRaw  minReal maxReal decimals
-  {VALUE_MAP,          SOURCE_MS2,     label_MAP, UNIT_PSI,     0,   0,     1023,   -14.5,  30.0,   1},
+  {VALUE_MAP,          SOURCE_MS2,     label_MAP, UNIT_KPA,     0,   0,     1500,   25.0,   350.0,  0},
   {VALUE_OIL_PRESSURE, SOURCE_DIRECT,  label_OIL, UNIT_PSI,     A1,  0,     1023,   0.0,    87.0,   1},
   {VALUE_OIL_TEMP,     SOURCE_DIRECT,  label_OLT, UNIT_CELSIUS, A2,  0,     1023,   20.0,   140.0,  0},
   {VALUE_AIR_TEMP,     SOURCE_MS2,     label_IAT, UNIT_CELSIUS, 0,   0,     1023,   -10.0,  80.0,   0},
@@ -68,9 +68,9 @@ const ValueConfig VALUE_CONFIGS[] PROGMEM PROGMEM = {
   {VALUE_COOLANT_TEMP, SOURCE_MS2,     label_CLT, UNIT_CELSIUS, 0,   0,     1023,   20.0,   120.0,  0},
   {VALUE_AFR,          SOURCE_MS2,     label_AFR, UNIT_RATIO,   0,   0,     255,    10.0,   20.0,   1},
   {VALUE_IGNITION,     SOURCE_MS2,     label_IGN, UNIT_DEGREES, 0,   -10,   50,     -10.0,  50.0,   1},
-  {VALUE_DWELL,        SOURCE_MS2,     label_DWL, UNIT_MS,      0,   0,     100,    0.0,    10.0,   1},
-  {VALUE_FUEL_PRESSURE,  SOURCE_MS2,   label_FUP, UNIT_PSI,     0,   0,     1023,   0.0,    100.0,  1},
-  {VALUE_PULSE_WIDTH,    SOURCE_MS2,   label_PW1, UNIT_MS,      0,   0,     2550,   0.0,    25.5,   1},
+  {VALUE_DWELL,        SOURCE_MS2,     label_DWL, UNIT_MS,      0,   0,     100,    0.0,    10.0,   0},
+  {VALUE_FUEL_PRESSURE,  SOURCE_MS2,   label_FUP, UNIT_PSI,     0,   0,     1023,   0.0,    100.0,  0},
+  {VALUE_PULSE_WIDTH,    SOURCE_MS2,   label_PW1, UNIT_MS,      0,   0,     2550,   0.0,    25.5,   0},
   {VALUE_ENGINE_READY,   SOURCE_MS2,   label_RDY, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
   {VALUE_ENGINE_CRANK,   SOURCE_MS2,   label_CRK, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
   {VALUE_ENGINE_ASE,     SOURCE_MS2,   label_ASE, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
@@ -87,6 +87,7 @@ const uint8_t VALUE_CONFIG_COUNT = sizeof(VALUE_CONFIGS) / sizeof(VALUE_CONFIGS[
 // Rangos de alerta para sensores individuales
 const AlertRange ALERT_RANGES[] PROGMEM = {
   // type                min    max      severity         enabled
+  {VALUE_MAP,            25.0,  150.0,   ALERT_WARNING,   true},   // > 150 kPa boost alto
   {VALUE_OIL_PRESSURE,   10.0,  87.0,    ALERT_CRITICAL,  true},   // < 10 PSI crítico
   {VALUE_OIL_TEMP,       40.0,  125.0,   ALERT_WARNING,   true},   // > 125°C advertencia
   {VALUE_OIL_TEMP,       40.0,  135.0,   ALERT_CRITICAL,  true},   // > 135°C crítico
@@ -111,7 +112,7 @@ const PageConfig PAGES[] PROGMEM = {
   {
     // Línea 1: Boost/vacío + IAT (carga del motor)
     {
-      {VALUE_MAP, true, true},      // MAP con signo +/- (vacío vs boost)
+      {VALUE_MAP, true, false},      // MAP con signo +/- (vacío vs boost)
       {VALUE_AIR_TEMP, true, false} // Temp aire admisión
     },
     // Línea 2: Presión aceite + Temp aceite (salud motor)
@@ -201,8 +202,8 @@ const uint8_t PAGE_COUNT = sizeof(PAGES) / sizeof(PAGES[0]);
 
 // ========== DISPLAY CONFIG ==========
 
-// Unidad por defecto para presiones
-bool USE_PSI_DEFAULT = true;  // true = PSI, false = BAR
+// Sistema de alertas
+#define ENABLE_ALERTS false  // true = alertas activas, false = desactivadas
 
 // Modo test por defecto
 bool TEST_MODE_DEFAULT = true;
@@ -210,6 +211,6 @@ bool TEST_MODE_DEFAULT = true;
 // Mensajes de inicio
 const char* BOOT_MSG_LINE1 = "Hi Setterlee!";
 const char* BOOT_MSG_LINE2 = "Welcome back :)";
-const unsigned long BOOT_DELAY = 1200;
+const unsigned long BOOT_DELAY = 3000;  // 3 segundos total (1.5s por mensaje)
 
 #endif

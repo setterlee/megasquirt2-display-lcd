@@ -53,6 +53,7 @@ enum DataSource {
 enum Unit {
   UNIT_BAR,            // Bar (presión)
   UNIT_PSI,            // PSI (presión)
+  UNIT_KPA,            // kPa (presión)
   UNIT_CELSIUS,        // Celsius (temperatura)
   UNIT_FAHRENHEIT,     // Fahrenheit (temperatura)
   UNIT_VOLT,           // Voltios

@@ -61,6 +61,7 @@ void loop() {
     // Actualizar datos
     dataManager.update();
     
+#if ENABLE_ALERTS
     // Verificar alertas
     alertManager.update();
     
@@ -70,6 +71,10 @@ void loop() {
     } else {
       display.setBacklight(false);
     }
+#else
+    // Alertas desactivadas - backlight siempre encendido
+    display.setBacklight(true);
+#endif
 
     // Manejar timeout de peaks
     if (showPeaks && millis() - peakViewStart > PEAK_VIEW_TIME) {
@@ -85,11 +90,14 @@ void loop() {
 
     // Renderizar pantalla
     if (!showUnitChange) {
+#if ENABLE_ALERTS
       if (alertManager.isAlertActive()) {
         // Mostrar alerta en lugar de la página
         display.showAlert(alertManager.getAlertLine1(), alertManager.getAlertLine2());
       }
-      else if (showPeaks) {
+      else
+#endif
+      if (showPeaks) {
         display.renderPeaks(currentPage);
       } else {
         display.renderPage(currentPage);
