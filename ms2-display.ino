@@ -65,7 +65,7 @@ void loop() {
     // Verificar alertas
     alertManager.update();
     
-    // Controlar backlight según alertas
+    // Controlar backlight según alertas (blink)
     if (alertManager.shouldBlink()) {
       display.setBacklight(true);
     } else {

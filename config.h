@@ -203,7 +203,7 @@ const uint8_t PAGE_COUNT = sizeof(PAGES) / sizeof(PAGES[0]);
 // ========== DISPLAY CONFIG ==========
 
 // Sistema de alertas
-#define ENABLE_ALERTS false  // true = alertas activas, false = desactivadas
+#define ENABLE_ALERTS true  // true = alertas activas, false = desactivadas
 
 // Modo test por defecto
 bool TEST_MODE_DEFAULT = true;

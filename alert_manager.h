@@ -8,19 +8,19 @@
 
 // ========== ALERT MANAGER CLASS ==========
 
-// Mensajes de alerta en PROGMEM
-const char alert_cold_load[] PROGMEM = "MOTOR FRIO";
-const char alert_cold_load2[] PROGMEM = "NO ACELERAR";
-const char alert_low_oil[] PROGMEM = "BAJA PRESION";
-const char alert_low_oil2[] PROGMEM = "ACEITE!!";
-const char alert_high_temp[] PROGMEM = "SOBRECALENT.";
-const char alert_high_temp2[] PROGMEM = "DETENER MOTOR";
-const char alert_oil_press[] PROGMEM = "OIL PRESSURE";
-const char alert_low[] PROGMEM = "LOW!";
-const char alert_oil_temp[] PROGMEM = "OIL TEMP HIGH";
-const char alert_coolant[] PROGMEM = "COOLANT HIGH";
-const char alert_battery[] PROGMEM = "BATTERY VOLT";
-const char alert_afr[] PROGMEM = "AFR UNSAFE";
+// Mensajes de alerta en PROGMEM centrados con asteriscos (16 chars cada línea)
+const char alert_cold_load[] PROGMEM = "***MOTOR FRIO***";
+const char alert_cold_load2[] PROGMEM = "**NO ACELERAR!**";
+const char alert_low_oil[] PROGMEM = "**BAJA PRESION**";
+const char alert_low_oil2[] PROGMEM = "*****ACEITE*****";
+const char alert_high_temp[] PROGMEM = "**SOBRECALENT.**";
+const char alert_high_temp2[] PROGMEM = "*DETENER MOTOR!*";
+const char alert_oil_press[] PROGMEM = "**OIL PRESSURE**";
+const char alert_low[] PROGMEM = "******LOW!******";
+const char alert_oil_temp[] PROGMEM = "*OIL TEMP HIGH!*";
+const char alert_coolant[] PROGMEM = "**COOLANT HIGH**";
+const char alert_battery[] PROGMEM = "**BATTERY VOLT**";
+const char alert_afr[] PROGMEM = "***AFR UNSAFE***";
 
 class AlertManager {
 private:
