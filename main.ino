@@ -24,7 +24,7 @@ const unsigned long UNIT_MSG_TIME     = 3000;
 // ---------- Estado ----------
 bool testMode = true;
 bool showPeaks = false;
-bool usePSI = false;
+bool usePSI = true;
 bool showUnitChange = false;
 
 unsigned long lastUpdate = 0;
@@ -76,9 +76,9 @@ void setup() {
   resetAllPeaks();
 
   lcd.setCursor(0, 0);
-  lcd.print("LANCER MONITOR");
+  lcd.print("Hi Setterlee!");
   lcd.setCursor(0, 1);
-  lcd.print("BOOTING...");
+  lcd.print("Welcome back :)");
   delay(1200);
   lcd.clear();
 }
