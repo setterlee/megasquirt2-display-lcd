@@ -75,9 +75,9 @@ const PageConfig PAGES[] = {
       {VALUE_BATTERY, true, false},  // Voltaje batería
       {VALUE_NONE, false, false}     // Sin segundo valor
     },
-    // Línea 2: Modo (test/real) - renderizado especial en display_helper
+    // Línea 2: Coolant
     {
-      {VALUE_NONE, false, false},
+      {VALUE_COOLANT_TEMP, true, false},
       {VALUE_NONE, false, false}
     }
   },

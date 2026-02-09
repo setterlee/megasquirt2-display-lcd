@@ -136,20 +136,10 @@ public:
 
     // Línea 2
     lcd->setCursor(0, 1);
-    
-    // Caso especial: página de batería muestra MODE
-    if (pageIndex == 1) {
-      printItem(page.line2.item1);
-      lcd->setCursor(0, 1);
-      lcd->print("MODE:");
-      lcd->print(dataManager->isTestMode() ? "TEST" : "REAL");
-      lcd->print("   ");
-    } else {
-      printItem(page.line2.item1);
-      lcd->print(" ");
-      printItem(page.line2.item2);
-      lcd->print("  "); // Clear trailing chars
-    }
+    printItem(page.line2.item1);
+    lcd->print(" ");
+    printItem(page.line2.item2);
+    lcd->print("  "); // Clear trailing chars
   }
 
   // Renderizar peaks de una página
