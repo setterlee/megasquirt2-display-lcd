@@ -54,6 +54,15 @@ private:
     if (!config) return;
 
     float value = dataManager->getValue(item.value);
+    
+    // Caso especial: Engine flags individuales - mostrar como ON/OFF
+    if (item.value >= VALUE_ENGINE_READY && item.value <= VALUE_ENGINE_FLATSHIFT) {
+      lcd->print(config->label);
+      lcd->print(":");
+      lcd->print(value > 0.5 ? "ON " : "OFF");
+      return;
+    }
+    
     value = convertValue(value, config->unit);
 
     // Label
@@ -72,6 +81,20 @@ private:
     if (item.showUnit) {
       lcd->print(getUnitLabel(config->unit));
     }
+  }
+
+  // Decodificar y mostrar engine status flags
+  void printEngineStatus(uint8_t status) {
+    // Mostrar los flags más importantes en formato compacto
+    // Formato: "RDY CRK ASE WUE" o "RDY TPS LCH FSH"
+    
+    if (status & FLAG_READY) lcd->print("RDY ");
+    if (status & FLAG_CRANK) lcd->print("CRK ");
+    if (status & FLAG_ASE) lcd->print("ASE ");
+    if (status & FLAG_WARMUP) lcd->print("WUE ");
+    if (status & FLAG_TPS_AE) lcd->print("TPS ");
+    if (status & FLAG_LAUNCH) lcd->print("LCH ");
+    if (status & FLAG_FLATSHIFT) lcd->print("FSH ");
   }
 
   // Formatear y mostrar peaks

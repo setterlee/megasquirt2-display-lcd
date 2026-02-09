@@ -11,6 +11,18 @@
 // Comando 'A' request realtime data block
 // Respuesta: 75 bytes de datos
 
+// Engine status flags (MS2 engine byte - offset 10)
+enum EngineStatusFlag {
+  FLAG_READY       = 0x01,  // bit 0: ready (0=not ready, 1=ready)
+  FLAG_CRANK       = 0x02,  // bit 1: cranking (0=not cranking, 1=cranking)
+  FLAG_ASE         = 0x04,  // bit 2: ASE (after start enrichment)
+  FLAG_WARMUP      = 0x08,  // bit 3: warmup enrichment
+  FLAG_TPS_AE      = 0x10,  // bit 4: TPS acceleration enrichment
+  FLAG_TPSACCEL    = 0x20,  // bit 5: TPS acceleration (different from AE)
+  FLAG_LAUNCH      = 0x40,  // bit 6: launch control
+  FLAG_FLATSHIFT   = 0x80,  // bit 7: flat shift / spark cut
+};
+
 // Offsets en el data block (MS2 Extra firmware)
 #define MS2_SECONDS       0   // 1 byte
 #define MS2_PW1_MSB       1   // 2 bytes - Pulse Width 1
@@ -36,6 +48,8 @@
 #define MS2_BAT_LSB       24
 #define MS2_DWELL_MSB     25  // 2 bytes - Dwell
 #define MS2_DWELL_LSB     26
+#define MS2_FUELPRES_MSB  27  // 2 bytes - Fuel Pressure (if available)
+#define MS2_FUELPRES_LSB  28
 
 #define MS2_DATA_SIZE     75  // Tamaño del bloque de datos
 
@@ -116,6 +130,36 @@ private:
         uint16_t dwell10 = readWord(MS2_DWELL_MSB);
         return dwell10 / 10.0;
       }
+      
+      case VALUE_FUEL_PRESSURE: {
+        // Fuel pressure en kPa * 10, convertir a PSI
+        uint16_t kpa10 = readWord(MS2_FUELPRES_MSB);
+        float kpa = kpa10 / 10.0;
+        float bar = kpa / 100.0;
+        return bar * 14.5038; // Convertir a PSI
+      }
+      
+      case VALUE_PULSE_WIDTH: {
+        // Pulse Width en 0.1ms
+        uint16_t pw10 = readWord(MS2_PW1_MSB);
+        return pw10 / 10.0; // Convertir a ms
+      }
+      
+      // Engine status flags individuales (MS2 engine byte - offset 10)
+      case VALUE_ENGINE_READY:
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_READY))) ? 1.0 : 0.0;
+      case VALUE_ENGINE_CRANK:
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_CRANK))) ? 1.0 : 0.0;
+      case VALUE_ENGINE_ASE:
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_ASE))) ? 1.0 : 0.0;
+      case VALUE_ENGINE_WARMUP:
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_WARMUP))) ? 1.0 : 0.0;
+      case VALUE_ENGINE_TPS_AE:
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_TPS_AE))) ? 1.0 : 0.0;
+      case VALUE_ENGINE_LAUNCH:
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_LAUNCH))) ? 1.0 : 0.0;
+      case VALUE_ENGINE_FLATSHIFT:
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_FLATSHIFT))) ? 1.0 : 0.0;
       
       default:
         return 0.0;

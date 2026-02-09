@@ -65,6 +65,17 @@ private:
     setValue(VALUE_COOLANT_TEMP, 70.0 + testStep * 30.0);  // 70 a 100°C (frío a caliente)
     setValue(VALUE_AFR, 12.0 + testStep * 5.0);            // 12.0 a 17.0 AFR (rico a pobre)
     setValue(VALUE_IGNITION, 10.0 + testStep * 25.0);      // 10 a 35° (ralentí a máximo)
+    setValue(VALUE_FUEL_PRESSURE, 35.0 + testStep * 15.0); // 35 a 50 PSI (ralentí a máximo)
+    setValue(VALUE_PULSE_WIDTH, 2.0 + testStep * 8.0);     // 2 a 10 ms (ralentí a carga)
+    
+    // Engine status flags individuales - ciclar para testing
+    setValue(VALUE_ENGINE_READY, 1.0);                      // Siempre activo en test
+    setValue(VALUE_ENGINE_CRANK, testStep < 0.1 ? 1.0 : 0.0);  // Solo al inicio
+    setValue(VALUE_ENGINE_ASE, testStep < 0.3 ? 1.0 : 0.0);    // Primeros instantes
+    setValue(VALUE_ENGINE_WARMUP, testStep < 0.5 ? 1.0 : 0.0); // Calentamiento
+    setValue(VALUE_ENGINE_TPS_AE, testStep > 0.5 ? 1.0 : 0.0); // Aceleración
+    setValue(VALUE_ENGINE_LAUNCH, testStep > 0.8 ? 1.0 : 0.0); // Alta carga
+    setValue(VALUE_ENGINE_FLATSHIFT, 0.0);                      // Raramente activo
   }
 
   // Actualizar valores reales desde sensores

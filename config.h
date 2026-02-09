@@ -46,6 +46,15 @@ const ValueConfig VALUE_CONFIGS[] = {
   {VALUE_COOLANT_TEMP, SOURCE_MS2,     "CLT",  UNIT_CELSIUS, 0,   0,     1023,   20.0,   120.0,  0},
   {VALUE_AFR,          SOURCE_MS2,     "AFR",  UNIT_RATIO,   0,   0,     255,    10.0,   20.0,   1},
   {VALUE_IGNITION,     SOURCE_MS2,     "IGN",  UNIT_DEGREES, 0,   -10,   50,     -10.0,  50.0,   1},
+  {VALUE_FUEL_PRESSURE,  SOURCE_MS2,   "FUP",  UNIT_PSI,     0,   0,     1023,   0.0,    100.0,  1},
+  {VALUE_PULSE_WIDTH,    SOURCE_MS2,   "PW1",  UNIT_MS,      0,   0,     2550,   0.0,    25.5,   1},
+  {VALUE_ENGINE_READY,   SOURCE_MS2,   "RDY",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_CRANK,   SOURCE_MS2,   "CRK",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_ASE,     SOURCE_MS2,   "ASE",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_WARMUP,  SOURCE_MS2,   "WUE",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_TPS_AE,  SOURCE_MS2,   "TPS",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_LAUNCH,  SOURCE_MS2,   "LCH",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_FLATSHIFT,SOURCE_MS2,  "FSH",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
 };
 
 const uint8_t VALUE_CONFIG_COUNT = sizeof(VALUE_CONFIGS) / sizeof(VALUE_CONFIGS[0]);
@@ -72,13 +81,13 @@ const PageConfig PAGES[] = {
   {
     // Línea 1: Batería
     {
-      {VALUE_BATTERY, true, false},  // Voltaje batería
-      {VALUE_NONE, false, false}     // Sin segundo valor
+      {VALUE_RPM, true, false},  // Voltaje batería
+      {VALUE_BATTERY, true, false}     // Sin segundo valor
     },
     // Línea 2: Coolant
     {
-      {VALUE_COOLANT_TEMP, true, false},
-      {VALUE_NONE, false, false}
+      {VALUE_ENGINE_ASE, true, false},
+      {VALUE_ENGINE_WARMUP, false, false}
     }
   },
   

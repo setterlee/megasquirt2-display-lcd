@@ -15,6 +15,25 @@ Incluye:
 
 ---
 
+## 📑 Índice
+
+1. [Arquitectura Modular](#-arquitectura-modular)
+2. [Hardware](#-hardware)
+3. [Conexiones](#-conexiones)
+4. [Configuración (config.h)](#%EF%B8%8F-configuración-configh)
+   - [Definir valores disponibles](#definir-valores-disponibles)
+   - [Configurar páginas](#configurar-páginas)
+5. [Sensores y Valores Disponibles](#-sensores-y-valores-disponibles)
+   - [Sensores directos](#sensores-directos-analógicos)
+   - [Valores desde MS2](#valores-desde-megasquirt-2)
+   - [Engine Status Flags](#engine-status-flags)
+6. [Funcionalidad](#-funcionalidad)
+7. [Fuentes de datos](#-fuentes-de-datos)
+8. [Agregar nuevo valor](#-cómo-agregar-un-nuevo-valor)
+9. [Ventajas](#-ventajas-de-la-arquitectura-modular)
+
+---
+
 ## 🏗️ Arquitectura Modular
 
 ### Estructura del proyecto
@@ -192,6 +211,76 @@ const PageConfig PAGES[] = {
 **¿Cuándo usar `showSign=true`?**
 - En valores que pueden ser positivos o negativos (MAP/boost)
 - Cuando quieres distinguir rápidamente dos estados (vacío vs boost)
+
+---
+
+## 📊 Sensores y Valores Disponibles
+
+### Sensores directos (analógicos)
+Conectados directamente a pines del Arduino:
+
+| Sensor | Pin | Rango | Unidad |
+|--------|-----|-------|--------|
+| Presión de aceite | A1 | 0-87 PSI | PSI |
+| Temp. aceite | A2 | 20-140°C | Celsius |
+| Batería | A3 | 0-20V | Volt |
+
+### Valores desde MegaSquirt 2
+Leídos por protocolo serial (9600 baud):
+
+| Valor | Label | Rango | Unidad | Descripción |
+|-------|-------|-------|--------|-------------|
+| MAP | MAP | -14.5 a 30 PSI | PSI | Presión absoluta (boost/vacío) |
+| Air Temp (IAT) | IAT | -10 a 80°C | Celsius | Temperatura aire admisión |
+| Coolant Temp | CLT | 20 a 120°C | Celsius | Temperatura refrigerante |
+| RPM | RPM | 0-8000 | RPM | Revoluciones por minuto |
+| TPS | TPS | 0-100 | % | Posición acelerador |
+| AFR | AFR | 10.0-20.0 | Ratio | Relación aire/combustible |
+| Ignition | IGN | -10 a 50 | Grados | Avance de ignición |
+| Dwell | DWL | 0-10 | ms | Tiempo de carga bobina |
+| Fuel Pressure | FUP | 0-100 | PSI | Presión de combustible |
+| Pulse Width | PW1 | 0-25.5 | ms | Duración inyección |
+| Engine Status | STA | - | Flags | Estado del motor (ver abajo) |
+
+### Engine Status Flags
+El valor `ENGINE_STATUS` decodifica el byte de estado del MS2 mostrando indicadores activos:
+
+**Flags disponibles:**
+- **RDY** = Ready (motor listo)
+- **CRK** = Cranking (arrancando)
+- **ASE** = After Start Enrichment (enriquecimiento post arranque)
+- **WUE** = Warmup Enrichment (enriquecimiento en calentamiento)
+- **TPS** = TPS Acceleration Enrichment (aceleración)
+- **LCH** = Launch Control (control de largada)
+- **FSH** = Flat Shift / Spark Cut (corte de chispa)
+
+**Formato en LCD:**
+```
+RDY ASE TPS     ← Motor listo, post arranque, acelerando
+RDY LCH FSH     ← Launch control activo, flat shift
+```
+
+**Uso típico:**
+```cpp
+{VALUE_ENGINE_STATUS, false, false}  // Ocupa línea completa con flags activos
+```
+
+**Valores normales esperados:**
+
+**Ralentí (800 RPM):**
+- Fuel Pressure: 40-45 PSI
+- Pulse Width: 2-3 ms
+- Status: RDY (+ WUE si motor frío)
+
+**Aceleración moderada (3000 RPM, 50% TPS):**
+- Fuel Pressure: 43-47 PSI
+- Pulse Width: 5-7 ms
+- Status: RDY TPS
+
+**Aceleración fuerte (5000 RPM, 100% TPS):**
+- Fuel Pressure: 45-50 PSI
+- Pulse Width: 8-12 ms
+- Status: RDY TPS
 
 ---
 

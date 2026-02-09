@@ -16,7 +16,16 @@ enum ValueType {
   VALUE_AFR,           // Air/Fuel Ratio (MS2)
   VALUE_IGNITION,      // Avance de ignición (MS2)
   VALUE_DWELL,         // Dwell time (MS2)
-  VALUE_NONE           // Sin valor
+  VALUE_FUEL_PRESSURE,   // Presión de combustible (MS2)
+  VALUE_PULSE_WIDTH,     // Pulse Width 1 (MS2)
+  VALUE_ENGINE_READY,    // Engine Ready flag (MS2)
+  VALUE_ENGINE_CRANK,    // Cranking flag (MS2)
+  VALUE_ENGINE_ASE,      // After Start Enrichment flag (MS2)
+  VALUE_ENGINE_WARMUP,   // Warmup Enrichment flag (MS2)
+  VALUE_ENGINE_TPS_AE,   // TPS Acceleration Enrichment flag (MS2)
+  VALUE_ENGINE_LAUNCH,   // Launch Control flag (MS2)
+  VALUE_ENGINE_FLATSHIFT,// Flat Shift flag (MS2)
+  VALUE_NONE             // Sin valor
 };
 
 // Fuentes de datos
