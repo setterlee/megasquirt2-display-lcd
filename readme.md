@@ -128,6 +128,28 @@ const ValueConfig VALUE_CONFIGS[] = {
 };
 ```
 
+**Parámetros de ValueConfig:**
+- `type`: Tipo de valor (VALUE_MAP, VALUE_OIL_PRESSURE, etc.)
+- `source`: Fuente de datos
+  - `SOURCE_DIRECT` = sensor analógico directo
+  - `SOURCE_MS2` = dato desde MegaSquirt 2
+  - `SOURCE_TEST` = valor simulado
+- `label`: Etiqueta corta para LCD (3-4 caracteres)
+- `unit`: Unidad de medida (UNIT_PSI, UNIT_CELSIUS, UNIT_VOLT, etc.)
+- `pin`: Pin analógico (solo para SOURCE_DIRECT, ej: A1, A2, A3)
+- `minRaw/maxRaw`: Rango del ADC (0-1023 para Arduino UNO)
+- `minReal/maxReal`: Rango real después de calibración
+- `decimals`: Cantidad de decimales a mostrar (0, 1, o 2)
+
+**Ejemplo de calibración:**
+```cpp
+// Sensor de presión 0-100 PSI conectado a A1
+// ADC 0 = 0 PSI, ADC 1023 = 100 PSI
+{VALUE_OIL_PRESSURE, SOURCE_DIRECT, "OIL", UNIT_PSI, A1, 0, 1023, 0.0, 100.0, 1}
+```
+
+---
+
 ### Configurar páginas
 ```cpp
 const PageConfig PAGES[] = {
@@ -147,6 +169,29 @@ const PageConfig PAGES[] = {
   // Agregar más páginas...
 };
 ```
+
+**Formato de DisplayItem**: `{ValueType, showUnit, showSign}`
+
+**Parámetros:**
+- `showUnit` (bool): Si mostrar la unidad después del valor
+  - `true` → "MAP:+17.4**p**", "60**C**", "14.5**V**"
+  - `false` → "MAP:+17.4", "60", "14.5"
+
+- `showSign` (bool): Si mostrar signo `+` en valores positivos
+  - `true` → "MAP:**+**17.4p" (muestra + y -)
+  - `false` → "MAP:17.4p" (solo muestra - cuando es negativo)
+
+**Ejemplos:**
+```cpp
+{VALUE_MAP, true, true}    // "MAP:+17.4p" o "MAP:-8.7p" (con unidad, con signo)
+{VALUE_MAP, true, false}   // "MAP:17.4p" o "MAP:-8.7p"  (con unidad, sin + para positivos)
+{VALUE_MAP, false, false}  // "MAP:17.4" o "MAP:-8.7"    (sin unidad, sin signo)
+{VALUE_OIL_TEMP, true, false}  // "92C" (temperatura, siempre positiva, no necesita +)
+```
+
+**¿Cuándo usar `showSign=true`?**
+- En valores que pueden ser positivos o negativos (MAP/boost)
+- Cuando quieres distinguir rápidamente dos estados (vacío vs boost)
 
 ---
 
