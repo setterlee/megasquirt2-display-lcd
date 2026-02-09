@@ -13,14 +13,13 @@
 
 // Engine status flags (MS2 engine byte - offset 10)
 enum EngineStatusFlag {
-  FLAG_READY       = 0x01,  // bit 0: ready (0=not ready, 1=ready)
-  FLAG_CRANK       = 0x02,  // bit 1: cranking (0=not cranking, 1=cranking)
-  FLAG_ASE         = 0x04,  // bit 2: ASE (after start enrichment)
-  FLAG_WARMUP      = 0x08,  // bit 3: warmup enrichment
-  FLAG_TPS_AE      = 0x10,  // bit 4: TPS acceleration enrichment
-  FLAG_TPSACCEL    = 0x20,  // bit 5: TPS acceleration (different from AE)
-  FLAG_LAUNCH      = 0x40,  // bit 6: launch control
-  FLAG_FLATSHIFT   = 0x80,  // bit 7: flat shift / spark cut
+  READY    = 0,  // bit 0
+  CRANK    = 1,  // bit 1
+  ASE      = 2,  // bit 2
+  WARMUP   = 3,  // bit 3
+  TPS_AE   = 4,  // bit 4
+  LAUNCH   = 6,  // bit 6
+  FLATSHIFT= 7   // bit 7
 };
 
 // Offsets en el data block (MS2 Extra firmware)
@@ -64,9 +63,11 @@ private:
 
   // Encontrar configuración de un valor
   const ValueConfig* getConfig(ValueType type) {
+    static ValueConfig tempCfg;
     for (uint8_t i = 0; i < VALUE_CONFIG_COUNT; i++) {
-      if (VALUE_CONFIGS[i].type == type && VALUE_CONFIGS[i].source == SOURCE_MS2) {
-        return &VALUE_CONFIGS[i];
+      memcpy_P(&tempCfg, &VALUE_CONFIGS[i], sizeof(ValueConfig));
+      if (tempCfg.type == type && tempCfg.source == SOURCE_MS2) {
+        return &tempCfg;
       }
     }
     return nullptr;
@@ -147,19 +148,19 @@ private:
       
       // Engine status flags individuales (MS2 engine byte - offset 10)
       case VALUE_ENGINE_READY:
-        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_READY))) ? 1.0 : 0.0;
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::READY))) ? 1.0 : 0.0;
       case VALUE_ENGINE_CRANK:
-        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_CRANK))) ? 1.0 : 0.0;
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::CRANK))) ? 1.0 : 0.0;
       case VALUE_ENGINE_ASE:
-        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_ASE))) ? 1.0 : 0.0;
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::ASE))) ? 1.0 : 0.0;
       case VALUE_ENGINE_WARMUP:
-        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_WARMUP))) ? 1.0 : 0.0;
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::WARMUP))) ? 1.0 : 0.0;
       case VALUE_ENGINE_TPS_AE:
-        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_TPS_AE))) ? 1.0 : 0.0;
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::TPS_AE))) ? 1.0 : 0.0;
       case VALUE_ENGINE_LAUNCH:
-        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_LAUNCH))) ? 1.0 : 0.0;
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::LAUNCH))) ? 1.0 : 0.0;
       case VALUE_ENGINE_FLATSHIFT:
-        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLAG_FLATSHIFT))) ? 1.0 : 0.0;
+        return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLATSHIFT))) ? 1.0 : 0.0;
       
       default:
         return 0.0;

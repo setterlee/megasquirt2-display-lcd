@@ -38,7 +38,9 @@ private:
   // Encontrar índice de un valor
   int getIndex(ValueType type) {
     for (uint8_t i = 0; i < VALUE_CONFIG_COUNT; i++) {
-      if (VALUE_CONFIGS[i].type == type) {
+      ValueConfig cfg;
+      memcpy_P(&cfg, &VALUE_CONFIGS[i], sizeof(ValueConfig));
+      if (cfg.type == type) {
         return i;
       }
     }
@@ -85,8 +87,11 @@ private:
 
     // Leer cada valor según su fuente
     for (uint8_t i = 0; i < VALUE_CONFIG_COUNT; i++) {
-      ValueType type = VALUE_CONFIGS[i].type;
-      DataSource source = VALUE_CONFIGS[i].source;
+      ValueConfig cfg;
+      memcpy_P(&cfg, &VALUE_CONFIGS[i], sizeof(ValueConfig));
+      
+      ValueType type = cfg.type;
+      DataSource source = cfg.source;
       float value = 0.0;
       bool valid = false;
 
@@ -185,14 +190,26 @@ public:
     return testMode;
   }
 
-  // Obtener configuración de un valor
-  const ValueConfig* getConfig(ValueType type) {
+  // Obtener configuración de un valor (retorna copia desde PROGMEM)
+  static ValueConfig getConfigCopy(ValueType type) {
     for (uint8_t i = 0; i < VALUE_CONFIG_COUNT; i++) {
-      if (VALUE_CONFIGS[i].type == type) {
-        return &VALUE_CONFIGS[i];
+      ValueConfig cfg;
+      memcpy_P(&cfg, &VALUE_CONFIGS[i], sizeof(ValueConfig));
+      if (cfg.type == type) {
+        return cfg;
       }
     }
-    return nullptr;
+    // Retornar config vacía si no se encuentra
+    ValueConfig empty = {VALUE_NONE, SOURCE_TEST, nullptr, UNIT_PSI, 0, 0, 0, 0.0, 0.0, 0};
+    return empty;
+  }
+  
+  // Obtener configuración de un valor (versión pointer para compatibilidad)
+  const ValueConfig* getConfig(ValueType type) {
+    static ValueConfig tempCfg;
+    tempCfg = getConfigCopy(type);
+    if (tempCfg.type == VALUE_NONE) return nullptr;
+    return &tempCfg;
   }
 };
 

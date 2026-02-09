@@ -11,9 +11,11 @@ class SensorDirect {
 private:
   // Encontrar configuración de un valor
   const ValueConfig* getConfig(ValueType type) {
+    static ValueConfig tempCfg;
     for (uint8_t i = 0; i < VALUE_CONFIG_COUNT; i++) {
-      if (VALUE_CONFIGS[i].type == type && VALUE_CONFIGS[i].source == SOURCE_DIRECT) {
-        return &VALUE_CONFIGS[i];
+      memcpy_P(&tempCfg, &VALUE_CONFIGS[i], sizeof(ValueConfig));
+      if (tempCfg.type == type && tempCfg.source == SOURCE_DIRECT) {
+        return &tempCfg;
       }
     }
     return nullptr;

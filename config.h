@@ -33,28 +33,49 @@ const unsigned long MS2_TIMEOUT       = 1000;  // ms timeout para MS2
 
 // ========== VALUE DEFINITIONS ==========
 
+// Labels en PROGMEM (ahorra RAM)
+const char label_MAP[] PROGMEM = "MAP";
+const char label_OIL[] PROGMEM = "OIL";
+const char label_OLT[] PROGMEM = "OLT";
+const char label_IAT[] PROGMEM = "IAT";
+const char label_BAT[] PROGMEM = "BAT";
+const char label_RPM[] PROGMEM = "RPM";
+const char label_TPS[] PROGMEM = "TPS";
+const char label_CLT[] PROGMEM = "CLT";
+const char label_AFR[] PROGMEM = "AFR";
+const char label_IGN[] PROGMEM = "IGN";
+const char label_FUP[] PROGMEM = "FUP";
+const char label_PW1[] PROGMEM = "PW1";
+const char label_RDY[] PROGMEM = "RDY";
+const char label_CRK[] PROGMEM = "CRK";
+const char label_ASE[] PROGMEM = "ASE";
+const char label_WUE[] PROGMEM = "WUE";
+const char label_TPS2[] PROGMEM = "TPS";
+const char label_LCH[] PROGMEM = "LCH";
+const char label_FSH[] PROGMEM = "FSH";
+
 // Configuración de cada valor disponible
-const ValueConfig VALUE_CONFIGS[] = {
-  // type              source          label   unit          pin  minRaw maxRaw  minReal maxReal decimals
-  {VALUE_MAP,          SOURCE_MS2,     "MAP",  UNIT_PSI,     0,   0,     1023,   -14.5,  30.0,   1},
-  {VALUE_OIL_PRESSURE, SOURCE_DIRECT,  "OIL",  UNIT_PSI,     A1,  0,     1023,   0.0,    87.0,   1},
-  {VALUE_OIL_TEMP,     SOURCE_DIRECT,  "OLT",  UNIT_CELSIUS, A2,  0,     1023,   20.0,   140.0,  0},
-  {VALUE_AIR_TEMP,     SOURCE_MS2,     "IAT",  UNIT_CELSIUS, 0,   0,     1023,   -10.0,  80.0,   0},
-  {VALUE_BATTERY,      SOURCE_DIRECT,  "BAT",  UNIT_VOLT,    A3,  0,     1023,   0.0,    20.0,   1},
-  {VALUE_RPM,          SOURCE_MS2,     "RPM",  UNIT_RPM,     0,   0,     8000,   0.0,    8000.0, 0},
-  {VALUE_TPS,          SOURCE_MS2,     "TPS",  UNIT_PERCENT, 0,   0,     100,    0.0,    100.0,  0},
-  {VALUE_COOLANT_TEMP, SOURCE_MS2,     "CLT",  UNIT_CELSIUS, 0,   0,     1023,   20.0,   120.0,  0},
-  {VALUE_AFR,          SOURCE_MS2,     "AFR",  UNIT_RATIO,   0,   0,     255,    10.0,   20.0,   1},
-  {VALUE_IGNITION,     SOURCE_MS2,     "IGN",  UNIT_DEGREES, 0,   -10,   50,     -10.0,  50.0,   1},
-  {VALUE_FUEL_PRESSURE,  SOURCE_MS2,   "FUP",  UNIT_PSI,     0,   0,     1023,   0.0,    100.0,  1},
-  {VALUE_PULSE_WIDTH,    SOURCE_MS2,   "PW1",  UNIT_MS,      0,   0,     2550,   0.0,    25.5,   1},
-  {VALUE_ENGINE_READY,   SOURCE_MS2,   "RDY",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
-  {VALUE_ENGINE_CRANK,   SOURCE_MS2,   "CRK",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
-  {VALUE_ENGINE_ASE,     SOURCE_MS2,   "ASE",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
-  {VALUE_ENGINE_WARMUP,  SOURCE_MS2,   "WUE",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
-  {VALUE_ENGINE_TPS_AE,  SOURCE_MS2,   "TPS",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
-  {VALUE_ENGINE_LAUNCH,  SOURCE_MS2,   "LCH",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
-  {VALUE_ENGINE_FLATSHIFT,SOURCE_MS2,  "FSH",  UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+const ValueConfig VALUE_CONFIGS[] PROGMEM PROGMEM = {
+  // type              source          label      unit          pin  minRaw maxRaw  minReal maxReal decimals
+  {VALUE_MAP,          SOURCE_MS2,     label_MAP, UNIT_PSI,     0,   0,     1023,   -14.5,  30.0,   1},
+  {VALUE_OIL_PRESSURE, SOURCE_DIRECT,  label_OIL, UNIT_PSI,     A1,  0,     1023,   0.0,    87.0,   1},
+  {VALUE_OIL_TEMP,     SOURCE_DIRECT,  label_OLT, UNIT_CELSIUS, A2,  0,     1023,   20.0,   140.0,  0},
+  {VALUE_AIR_TEMP,     SOURCE_MS2,     label_IAT, UNIT_CELSIUS, 0,   0,     1023,   -10.0,  80.0,   0},
+  {VALUE_BATTERY,      SOURCE_DIRECT,  label_BAT, UNIT_VOLT,    A3,  0,     1023,   0.0,    20.0,   1},
+  {VALUE_RPM,          SOURCE_MS2,     label_RPM, UNIT_RPM,     0,   0,     8000,   0.0,    8000.0, 0},
+  {VALUE_TPS,          SOURCE_MS2,     label_TPS, UNIT_PERCENT, 0,   0,     100,    0.0,    100.0,  0},
+  {VALUE_COOLANT_TEMP, SOURCE_MS2,     label_CLT, UNIT_CELSIUS, 0,   0,     1023,   20.0,   120.0,  0},
+  {VALUE_AFR,          SOURCE_MS2,     label_AFR, UNIT_RATIO,   0,   0,     255,    10.0,   20.0,   1},
+  {VALUE_IGNITION,     SOURCE_MS2,     label_IGN, UNIT_DEGREES, 0,   -10,   50,     -10.0,  50.0,   1},
+  {VALUE_FUEL_PRESSURE,  SOURCE_MS2,   label_FUP, UNIT_PSI,     0,   0,     1023,   0.0,    100.0,  1},
+  {VALUE_PULSE_WIDTH,    SOURCE_MS2,   label_PW1, UNIT_MS,      0,   0,     2550,   0.0,    25.5,   1},
+  {VALUE_ENGINE_READY,   SOURCE_MS2,   label_RDY, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_CRANK,   SOURCE_MS2,   label_CRK, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_ASE,     SOURCE_MS2,   label_ASE, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_WARMUP,  SOURCE_MS2,   label_WUE, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_TPS_AE,  SOURCE_MS2,   label_TPS2,UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_LAUNCH,  SOURCE_MS2,   label_LCH, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_ENGINE_FLATSHIFT,SOURCE_MS2,  label_FSH, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
 };
 
 const uint8_t VALUE_CONFIG_COUNT = sizeof(VALUE_CONFIGS) / sizeof(VALUE_CONFIGS[0]);
@@ -62,7 +83,7 @@ const uint8_t VALUE_CONFIG_COUNT = sizeof(VALUE_CONFIGS) / sizeof(VALUE_CONFIGS[
 // ========== PAGE DEFINITIONS ==========
 
 // Configuración de páginas
-const PageConfig PAGES[] = {
+const PageConfig PAGES[] PROGMEM = {
   // PAGE 0: MAIN - Boost y aceite
   {
     // Línea 1: MAP + Temp aire

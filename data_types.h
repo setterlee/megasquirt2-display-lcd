@@ -55,7 +55,7 @@ enum Unit {
 struct ValueConfig {
   ValueType type;      // Tipo de valor
   DataSource source;   // Fuente de datos
-  const char* label;   // Etiqueta corta (3-4 chars para LCD)
+  const char* label;   // Etiqueta corta en PROGMEM (3-4 chars para LCD)
   Unit unit;           // Unidad de medida
   uint8_t pin;         // Pin analógico (si SOURCE_DIRECT)
   int minRaw;          // Valor mínimo raw del ADC/MS2

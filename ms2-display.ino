@@ -129,7 +129,7 @@ void handlePeakButton() {
   if (current == LOW && !longHandled &&
       millis() - pressStart >= LONG_PRESS_TIME) {
     dataManager.resetPeaks();
-    display.showMessage("PEAK RESET", "DONE", 1000);
+    display.showMessage(F("PEAK RESET"), F("DONE"), 1000);
     longHandled = true;
   }
 

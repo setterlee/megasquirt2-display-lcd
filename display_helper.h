@@ -55,19 +55,23 @@ private:
 
     float value = dataManager->getValue(item.value);
     
+    // Buffer para leer label desde PROGMEM
+    char labelBuf[5];
+    strcpy_P(labelBuf, config->label);
+    
     // Caso especial: Engine flags individuales - mostrar como ON/OFF
     if (item.value >= VALUE_ENGINE_READY && item.value <= VALUE_ENGINE_FLATSHIFT) {
-      lcd->print(config->label);
-      lcd->print(":");
-      lcd->print(value > 0.5 ? "ON " : "OFF");
+      lcd->print(labelBuf);
+      lcd->print(F(":"));
+      lcd->print(value > 0.5 ? F("ON ") : F("OFF"));
       return;
     }
     
     value = convertValue(value, config->unit);
 
     // Label
-    lcd->print(config->label);
-    lcd->print(":");
+    lcd->print(labelBuf);
+    lcd->print(F(":"));
 
     // Signo
     if (item.showSign && value >= 0) {
@@ -81,20 +85,6 @@ private:
     if (item.showUnit) {
       lcd->print(getUnitLabel(config->unit));
     }
-  }
-
-  // Decodificar y mostrar engine status flags
-  void printEngineStatus(uint8_t status) {
-    // Mostrar los flags más importantes en formato compacto
-    // Formato: "RDY CRK ASE WUE" o "RDY TPS LCH FSH"
-    
-    if (status & FLAG_READY) lcd->print("RDY ");
-    if (status & FLAG_CRANK) lcd->print("CRK ");
-    if (status & FLAG_ASE) lcd->print("ASE ");
-    if (status & FLAG_WARMUP) lcd->print("WUE ");
-    if (status & FLAG_TPS_AE) lcd->print("TPS ");
-    if (status & FLAG_LAUNCH) lcd->print("LCH ");
-    if (status & FLAG_FLATSHIFT) lcd->print("FSH ");
   }
 
   // Formatear y mostrar peaks
@@ -148,35 +138,40 @@ public:
   void renderPage(uint8_t pageIndex) {
     if (pageIndex >= PAGE_COUNT) return;
 
-    const PageConfig& page = PAGES[pageIndex];
+    PageConfig page;
+    memcpy_P(&page, &PAGES[pageIndex], sizeof(PageConfig));
     
     // Línea 1
     lcd->setCursor(0, 0);
     printItem(page.line1.item1);
-    lcd->print(" ");
+    lcd->print(F(" "));
     printItem(page.line1.item2);
-    lcd->print("  "); // Clear trailing chars
+    lcd->print(F("  ")); // Clear trailing chars
 
     // Línea 2
     lcd->setCursor(0, 1);
     printItem(page.line2.item1);
-    lcd->print(" ");
+    lcd->print(F(" "));
     printItem(page.line2.item2);
-    lcd->print("  "); // Clear trailing chars
+    lcd->print(F("  ")); // Clear trailing chars
   }
 
   // Renderizar peaks de una página
   void renderPeaks(uint8_t pageIndex) {
     if (pageIndex >= PAGE_COUNT) return;
 
-    const PageConfig& page = PAGES[pageIndex];
+    PageConfig page;
+    memcpy_P(&page, &PAGES[pageIndex], sizeof(PageConfig));
+    
+    char labelBuf[5];
     
     // Línea 1
     lcd->setCursor(0, 0);
     if (page.line1.item1.value != VALUE_NONE) {
       const ValueConfig* cfg = dataManager->getConfig(page.line1.item1.value);
-      lcd->print(cfg->label);
-      lcd->print(" ");
+      strcpy_P(labelBuf, cfg->label);
+      lcd->print(labelBuf);
+      lcd->print(F(" "));
       printPeaks(page.line1.item1);
     }
 
@@ -184,14 +179,15 @@ public:
     lcd->setCursor(0, 1);
     if (page.line2.item1.value != VALUE_NONE) {
       const ValueConfig* cfg = dataManager->getConfig(page.line2.item1.value);
-      lcd->print(cfg->label);
-      lcd->print(" ");
+      strcpy_P(labelBuf, cfg->label);
+      lcd->print(labelBuf);
+      lcd->print(F(" "));
       printPeaks(page.line2.item1);
     }
   }
 
   // Mostrar mensaje temporal
-  void showMessage(const char* line1, const char* line2, unsigned long duration = 0) {
+  void showMessage(const __FlashStringHelper* line1, const __FlashStringHelper* line2, unsigned long duration = 0) {
     lcd->clear();
     lcd->setCursor(0, 0);
     lcd->print(line1);
@@ -209,9 +205,9 @@ public:
     usePSI = !usePSI;
     lcd->clear();
     lcd->setCursor(0, 0);
-    lcd->print("UNIT CHANGE:");
+    lcd->print(F("UNIT CHANGE:"));
     lcd->setCursor(0, 1);
-    lcd->print(usePSI ? "BAR -> PSI" : "PSI -> BAR");
+    lcd->print(usePSI ? F("BAR -> PSI") : F("PSI -> BAR"));
   }
 
   // Clear display
