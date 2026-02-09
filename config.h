@@ -44,6 +44,7 @@ const char label_TPS[] PROGMEM = "TPS";
 const char label_CLT[] PROGMEM = "CLT";
 const char label_AFR[] PROGMEM = "AFR";
 const char label_IGN[] PROGMEM = "IGN";
+const char label_DWL[] PROGMEM = "DWL";
 const char label_FUP[] PROGMEM = "FUP";
 const char label_PW1[] PROGMEM = "PW1";
 const char label_RDY[] PROGMEM = "RDY";
@@ -67,6 +68,7 @@ const ValueConfig VALUE_CONFIGS[] PROGMEM PROGMEM = {
   {VALUE_COOLANT_TEMP, SOURCE_MS2,     label_CLT, UNIT_CELSIUS, 0,   0,     1023,   20.0,   120.0,  0},
   {VALUE_AFR,          SOURCE_MS2,     label_AFR, UNIT_RATIO,   0,   0,     255,    10.0,   20.0,   1},
   {VALUE_IGNITION,     SOURCE_MS2,     label_IGN, UNIT_DEGREES, 0,   -10,   50,     -10.0,  50.0,   1},
+  {VALUE_DWELL,        SOURCE_MS2,     label_DWL, UNIT_MS,      0,   0,     100,    0.0,    10.0,   1},
   {VALUE_FUEL_PRESSURE,  SOURCE_MS2,   label_FUP, UNIT_PSI,     0,   0,     1023,   0.0,    100.0,  1},
   {VALUE_PULSE_WIDTH,    SOURCE_MS2,   label_PW1, UNIT_MS,      0,   0,     2550,   0.0,    25.5,   1},
   {VALUE_ENGINE_READY,   SOURCE_MS2,   label_RDY, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
@@ -104,35 +106,95 @@ const uint8_t ALERT_RANGE_COUNT = sizeof(ALERT_RANGES) / sizeof(ALERT_RANGES[0])
 
 // Configuración de páginas
 const PageConfig PAGES[] PROGMEM = {
-  // PAGE 0: MAIN - Boost y aceite
+  // PAGE 0: DAILY DRIVING - Lo esencial para uso diario
+  // Monitoreo de boost y salud del motor
   {
-    // Línea 1: MAP + Temp aire
+    // Línea 1: Boost/vacío + IAT (carga del motor)
     {
-      {VALUE_MAP, true, true},      // MAP con unidad y signo +/-
-      {VALUE_AIR_TEMP, true, false} // IAT con unidad
+      {VALUE_MAP, true, true},      // MAP con signo +/- (vacío vs boost)
+      {VALUE_AIR_TEMP, true, false} // Temp aire admisión
     },
-    // Línea 2: Presión aceite + Temp aceite
+    // Línea 2: Presión aceite + Temp aceite (salud motor)
     {
-      {VALUE_OIL_PRESSURE, true, false}, // Presión aceite con unidad
-      {VALUE_OIL_TEMP, true, false}      // Temp aceite con unidad
+      {VALUE_OIL_PRESSURE, true, false}, // Presión aceite crítica
+      {VALUE_OIL_TEMP, true, false}      // Temp aceite para protección
     }
   },
   
-  // PAGE 1: BATTERY - Batería y modo
+  // PAGE 1: PERFORMANCE - Monitoreo en pista/aceleración
+  // Lo que necesitás ver cuando exigís el motor
   {
-    // Línea 1: Batería
+    // Línea 1: RPM + TPS (dónde estás en el powerband)
     {
-      {VALUE_RPM, true, false},  // Voltaje batería
-      {VALUE_BATTERY, true, false}     // Sin segundo valor
+      {VALUE_RPM, true, false},     // Revoluciones
+      {VALUE_TPS, true, false}      // % acelerador
     },
-    // Línea 2: Coolant
+    // Línea 2: AFR + Ignition (tuning crítico)
     {
-      {VALUE_ENGINE_ASE, true, false},
-      {VALUE_ENGINE_WARMUP, false, false}
+      {VALUE_AFR, false, false},    // Mezcla A/F (sin unidad, es ratio)
+      {VALUE_IGNITION, true, false} // Avance en grados
     }
   },
   
-  // Puedes agregar más páginas aquí
+  // PAGE 2: ENGINE HEALTH - Temperaturas y sistemas críticos
+  // Para vigilar que todo esté en rango seguro
+  {
+    // Línea 1: Temperaturas del motor
+    {
+      {VALUE_COOLANT_TEMP, true, false}, // Temp refrigerante
+      {VALUE_OIL_TEMP, true, false}      // Temp aceite
+    },
+    // Línea 2: Presión aceite + Batería
+    {
+      {VALUE_OIL_PRESSURE, true, false}, // Presión aceite
+      {VALUE_BATTERY, true, false}       // Voltaje sistema
+    }
+  },
+  
+  // PAGE 3: FUEL SYSTEM - Sistema de combustible
+  // Para diagnosticar problemas de mezcla o presión
+  {
+    // Línea 1: Fuel pressure + Pulse width
+    {
+      {VALUE_FUEL_PRESSURE, true, false}, // Presión combustible
+      {VALUE_PULSE_WIDTH, true, false}    // Ancho pulso inyectores
+    },
+    // Línea 2: MAP + AFR (carga y mezcla relacionadas)
+    {
+      {VALUE_MAP, true, true},       // Boost/vacío
+      {VALUE_AFR, false, false}      // Mezcla resultante
+    }
+  },
+  
+  // PAGE 4: COLD START DIAGNOSTICS 
+  // Para ver como se comporta el cold start
+  {
+    // Línea 1: Flags de arranque y warmup
+    {
+      {VALUE_ENGINE_ASE, true, false},    // After Start Enrichment
+      {VALUE_ENGINE_WARMUP, true, false}  // Warmup Enrichment
+    },
+    // Línea 2: Flags de aceleración y control
+    {
+      {VALUE_COOLANT_TEMP, true, false}, // Coolant temp 
+      {VALUE_PULSE_WIDTH, true, false}  // Launch Control
+    }
+  },
+  
+  // PAGE 5: ADVANCED TUNING - Parámetros avanzados
+  // Para tuners: timing, dwell, y más detalle
+  {
+    // Línea 1: RPM + Dwell
+    {
+      {VALUE_RPM, true, false},      // Revoluciones
+      {VALUE_DWELL, true, false}     // Tiempo carga bobina
+    },
+    // Línea 2: Ignition + Coolant
+    {
+      {VALUE_IGNITION, true, false},     // Avance ignición
+      {VALUE_COOLANT_TEMP, true, false}  // Temp para corrección
+    }
+  }
 };
 
 const uint8_t PAGE_COUNT = sizeof(PAGES) / sizeof(PAGES[0]);
