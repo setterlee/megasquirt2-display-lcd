@@ -1,0 +1,98 @@
+========================================
+PREVIEW LCD 16x2 - MODO TEST
+========================================
+
+Formato de pantalla: [1234567890123456]
+
+========================================
+PÁGINA 0: MAIN
+========================================
+
+Valores mínimos (testStep = 0.0):
+[MAP:-8.7p 10C  ]  <- Línea 1
+[OIL:14.5p 60C  ]  <- Línea 2
+
+Valores medios (testStep = 0.5):
+[MAP:+4.4p 30C  ]
+[OIL:44.2p 85C  ]
+
+Valores máximos (testStep = 1.0):
+[MAP:+17.4p 50C ]
+[OIL:73.0p 110C ]
+
+========================================
+PÁGINA 1: BATERÍA
+========================================
+
+[BAT:12.5V      ]
+[MODE:TEST      ]
+
+[BAT:13.5V      ]
+[MODE:TEST      ]
+
+[BAT:14.5V      ]
+[MODE:TEST      ]
+
+========================================
+MODO PEAKS (MIN/MAX)
+========================================
+
+Página 0:
+[MAP -8.7/+17.4 ]
+[OIL 14.5/73.0p ]
+
+========================================
+ANÁLISIS DE CARACTERES
+========================================
+
+Línea tipo:  "MAP:+17.4p 50C "
+             123456789012345 (15 chars usados, 1 espacio libre)
+
+Desglose:
+- "MAP:" = 4 chars
+- "+17.4" = 5 chars (signo + 2 dígitos + punto + 1 decimal)
+- "p " = 2 chars (unidad + espacio)
+- "50" = 2 chars
+- "C " = 2 chars (unidad + espacio)
+Total: 15 chars
+
+Línea tipo:  "OIL:73.0p 110C "
+             123456789012345 (15 chars usados, 1 espacio libre)
+
+Desglose:
+- "OIL:" = 4 chars
+- "73.0" = 4 chars (2 dígitos + punto + 1 decimal)
+- "p " = 2 chars
+- "110" = 3 chars
+- "C " = 2 chars
+Total: 15 chars
+
+========================================
+CONVERSIÓN BAR → PSI
+========================================
+
+En BAR (testStep = 0.5):
+[MAP:+0.3b 30C  ]  <- Boost moderado en bar
+[OIL:3.0b 85C   ]  <- Presión en bar
+
+En PSI (default):
+[MAP:+4.4p 30C  ]  <- Mismo valor en PSI
+[OIL:44.2p 85C  ]  <- Mismo valor en PSI
+
+========================================
+NOTAS
+========================================
+
+✅ Todos los valores caben en 16 caracteres
+✅ Rangos realistas para un Lancer del 93
+✅ MAP puede mostrar valores negativos (vacío)
+✅ Temperaturas hasta 3 dígitos (110°C)
+✅ PSI hasta 2 dígitos + 1 decimal (73.0)
+✅ Siempre queda 1 espacio al final para "limpieza"
+
+Valores críticos a monitorear:
+- MAP < 0 = vacío (normal en aceleración baja)
+- MAP > 14 PSI = boost alto (turbo trabajando)
+- OIL < 20 PSI = presión baja (alarma)
+- OIL_TEMP > 100°C = temperatura alta (alarma)
+- BATTERY < 13V = sistema de carga con problemas

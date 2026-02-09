@@ -54,17 +54,17 @@ private:
     if (testStep >= 1.0) testUp = false;
     if (testStep <= 0.0) testUp = true;
 
-    // Generar valores test para cada tipo
-    setValue(VALUE_MAP, -0.6 + testStep * 1.8);
-    setValue(VALUE_OIL_PRESSURE, 1.0 + testStep * 4.0);
-    setValue(VALUE_OIL_TEMP, 60.0 + testStep * 50.0);
-    setValue(VALUE_AIR_TEMP, 10.0 + testStep * 60.0);
-    setValue(VALUE_BATTERY, 12.0 + testStep * 1.8);
-    setValue(VALUE_RPM, 800.0 + testStep * 6000.0);
-    setValue(VALUE_TPS, testStep * 100.0);
-    setValue(VALUE_COOLANT_TEMP, 70.0 + testStep * 40.0);
-    setValue(VALUE_AFR, 12.0 + testStep * 5.0);
-    setValue(VALUE_IGNITION, 10.0 + testStep * 30.0);
+    // Generar valores test para cada tipo (rangos realistas)
+    setValue(VALUE_MAP, -8.7 + testStep * 26.1);           // -8.7 a +17.4 PSI (vacío a boost)
+    setValue(VALUE_OIL_PRESSURE, 14.5 + testStep * 58.5);  // 14.5 a 73.0 PSI (ralentí a alta)
+    setValue(VALUE_OIL_TEMP, 60.0 + testStep * 50.0);      // 60 a 110°C (normal a alta)
+    setValue(VALUE_AIR_TEMP, 10.0 + testStep * 40.0);      // 10 a 50°C (frío a caliente)
+    setValue(VALUE_BATTERY, 12.5 + testStep * 2.0);        // 12.5 a 14.5V (descarga a carga)
+    setValue(VALUE_RPM, 800.0 + testStep * 6000.0);        // 800 a 6800 RPM
+    setValue(VALUE_TPS, testStep * 100.0);                 // 0 a 100%
+    setValue(VALUE_COOLANT_TEMP, 70.0 + testStep * 30.0);  // 70 a 100°C (frío a caliente)
+    setValue(VALUE_AFR, 12.0 + testStep * 5.0);            // 12.0 a 17.0 AFR (rico a pobre)
+    setValue(VALUE_IGNITION, 10.0 + testStep * 25.0);      // 10 a 35° (ralentí a máximo)
   }
 
   // Actualizar valores reales desde sensores
