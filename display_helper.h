@@ -143,19 +143,21 @@ public:
     PageConfig page;
     memcpy_P(&page, &PAGES[pageIndex], sizeof(PageConfig));
     
-    // Línea 1
+    // Línea 1 - Item 1 en columna 0, Item 2 en columna 9
     lcd->setCursor(0, 0);
     printItem(page.line1.item1);
-    lcd->print(F(" "));
+    lcd->print(F("         "));  // Limpiar hasta columna 9
+    lcd->setCursor(9, 0);  // Posición fija para segundo valor
     printItem(page.line1.item2);
-    lcd->print(F("  ")); // Clear trailing chars
+    lcd->print(F("       "));  // Limpiar resto de línea
 
-    // Línea 2
+    // Línea 2 - Item 1 en columna 0, Item 2 en columna 9
     lcd->setCursor(0, 1);
     printItem(page.line2.item1);
-    lcd->print(F(" "));
+    lcd->print(F("         "));  // Limpiar hasta columna 9
+    lcd->setCursor(9, 1);  // Posición fija para segundo valor
     printItem(page.line2.item2);
-    lcd->print(F("  ")); // Clear trailing chars
+    lcd->print(F("       "));  // Limpiar resto de línea
   }
 
   // Renderizar peaks de una página
