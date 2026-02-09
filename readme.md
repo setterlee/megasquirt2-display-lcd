@@ -9,7 +9,31 @@ Incluye:
 - paginación por botón
 - registro de mínimos y máximos (MIN / MAX)
 - modo TEST para validación sin motor
-- arquitectura extensible (alarmas, más páginas, ESP32 futuro)
+- **arquitectura modular y configurable**
+- **comunicación con MegaSquirt 2**
+- **sensores directos + MS2 unificados**
+
+---
+
+## 🏗️ Arquitectura Modular
+
+### Estructura del proyecto
+```
+ms2-display/
+├── main.ino              # Loop principal, setup, UI
+├── config.h              # Configuración de páginas y data sources
+├── data_types.h          # Enums y estructuras de datos
+├── sensor_direct.h       # Lectura de sensores directos (analog pins)
+├── sensor_ms2.h          # Comunicación con MegaSquirt 2 (serial)
+├── data_manager.h        # Gestor de datos (unifica sensores directos + MS2)
+└── display_helper.h      # Funciones auxiliares de display
+```
+
+### Filosofía de diseño
+- **Configuración centralizada**: Todo se define en `config.h`
+- **Fuentes de datos intercambiables**: Cada valor puede venir de sensor directo o MS2
+- **Páginas customizables**: Agregar/modificar páginas sin tocar código
+- **Extensible**: Fácil agregar nuevos sensores o protocolos (CAN, ESP32, etc.)
 
 ---
 
@@ -28,11 +52,17 @@ Incluye:
 - Conectados a GND
 - Pull-up interno activado por software
 
-### Sensores (analógicos)
-- MAP / Boost
-- Presión de aceite
-- Temperatura de aceite
-- Voltaje batería (divisor resistivo)
+### Sensores directos (analógicos)
+- Presión de aceite → A1
+- Temperatura de aceite → A2
+- Voltaje batería → A3 (divisor resistivo)
+- Temperatura de aire → A6
+
+### MegaSquirt 2
+- Puerto Serial → D0 (RX) / D1 (TX)
+- Baud rate: 9600
+- Protocolo: MS2 Extra realtime data
+- Datos disponibles: MAP, IAT, CLT, RPM, TPS, AFR, ignition timing, etc.
 
 ---
 
@@ -50,13 +80,22 @@ Incluye:
 
 ---
 
-### Sensores
+### Sensores Directos
 | Sensor | Pin |
 |---|---|
-| MAP | A0 |
 | Presión aceite | A1 |
 | Temp aceite | A2 |
 | Batería | A3 |
+| Temp aire | A6 |
+
+---
+
+### MegaSquirt 2
+| Señal | Arduino |
+|---|---|
+| TX MS2 | RX (D0) |
+| RX MS2 | TX (D1) |
+| GND | GND común |
 
 ---
 
@@ -68,13 +107,46 @@ Incluye:
 
 Conexión:
 ```
-
 D2 ----[ BOTÓN PAGE ]---- GND
 D3 ----[ BOTÓN PEAK ]---- GND
-
 ```
 
 Configurados con `INPUT_PULLUP`.
+
+---
+
+## ⚙️ Configuración (config.h)
+
+### Definir valores disponibles
+```cpp
+const ValueConfig VALUE_CONFIGS[] = {
+  // type              source          label   unit          pin  minRaw maxRaw  minReal maxReal decimals
+  {VALUE_MAP,          SOURCE_MS2,     "MAP",  UNIT_PSI,     0,   0,     1023,   -14.5,  30.0,   1},
+  {VALUE_OIL_PRESSURE, SOURCE_DIRECT,  "OIL",  UNIT_PSI,     A1,  0,     1023,   0.0,    87.0,   1},
+  {VALUE_OIL_TEMP,     SOURCE_DIRECT,  "OLT",  UNIT_CELSIUS, A2,  0,     1023,   20.0,   140.0,  0},
+  // ... más valores
+};
+```
+
+### Configurar páginas
+```cpp
+const PageConfig PAGES[] = {
+  // PAGE 0: MAIN
+  {
+    // Línea 1: MAP + Temp aire
+    {
+      {VALUE_MAP, true, true},      // con unidad y signo +/-
+      {VALUE_AIR_TEMP, true, false} // con unidad
+    },
+    // Línea 2: Presión aceite + Temp aceite
+    {
+      {VALUE_OIL_PRESSURE, true, false},
+      {VALUE_OIL_TEMP, true, false}
+    }
+  },
+  // Agregar más páginas...
+};
+```
 
 ---
 
@@ -82,26 +154,23 @@ Configurados con `INPUT_PULLUP`.
 
 ### Páginas
 
-#### Página principal
+#### Página principal (sensores directos + MS2)
 ```
-
-MAP:+0.8b
-OIL:4.2b 92C
-
+MAP:+11.6p 25C
+OIL:60.9p 92C
 ```
 
 #### Página batería
 ```
-
 BAT:13.8V
-MODE:REAL
-
+MODE:TEST
 ```
 
 ---
 
 ### Botón PAGE
 - Click corto → cambia de página
+- Click largo (≥1.5 s) → cambia unidad BAR ↔ PSI
 
 ---
 
@@ -109,71 +178,75 @@ MODE:REAL
 - Click corto → muestra **MIN / MAX** de la página actual (3 s)
 - Click largo (≥1.5 s) → resetea MIN / MAX
 
-Formato MIN / MAX (mínimo a la izquierda):
+Formato MIN / MAX:
 ```
-
-MAP -0.6/+1.2
-OIL 1.0/5.1b
-
-````
+MAP -8.7/+17.4
+OIL 14.5/73.1p
+```
 
 ---
 
 ## 🧪 Modo TEST
 
 - Valores simulados (oscilantes)
-- Permite validar:
-  - layout
-  - legibilidad
-  - refresco
-  - lógica de picos
+- Permite validar sin motor ni MS2 conectado
 - Se indica en pantalla como `MODE:TEST`
-
-Ideal para pruebas sin motor.
+- Configurable en `config.h`: `TEST_MODE_DEFAULT = true`
 
 ---
 
-## ⏱️ Tiempos clave (configurables)
+## 📊 Fuentes de datos
 
+### SOURCE_DIRECT
+- Lee directamente de pines analógicos
+- Calibración en `config.h`
+- No requiere MS2
+
+### SOURCE_MS2
+- Lee desde MegaSquirt 2 por serial
+- Parsea protocolo binario MS2 Extra
+- Fallback automático si no hay conexión
+
+### SOURCE_TEST
+- Valores simulados oscilantes
+- Útil para desarrollo y testing
+
+---
+
+## 🔧 Cómo agregar un nuevo valor
+
+1. **Definir enum** en `data_types.h`:
 ```cpp
-UPDATE_INTERVAL = 250 ms
-TEST_INTERVAL   = 120 ms
-PEAK_VIEW_TIME  = 3000 ms
-LONG_PRESS_TIME = 1500 ms
-````
+enum ValueType {
+  // ...
+  VALUE_FUEL_PRESSURE,  // Nuevo valor
+};
+```
+
+2. **Configurar** en `config.h`:
+```cpp
+{VALUE_FUEL_PRESSURE, SOURCE_DIRECT, "FUL", UNIT_PSI, A7, 0, 1023, 0.0, 100.0, 1},
+```
+
+3. **Agregar a página** en `config.h`:
+```cpp
+{VALUE_FUEL_PRESSURE, true, false}
+```
+
+Listo! El sistema lo maneja automáticamente.
 
 ---
 
-## 📚 Librerías requeridas
+## 🚀 Ventajas de la arquitectura modular
 
-Instalar desde el Library Manager:
-
-* `LiquidCrystal_I2C`
-* `Wire` (incluida en Arduino core)
-
----
-
-## 🧱 Arquitectura del código
-
-* Lectura de sensores separada de display
-* Picos (MIN / MAX) independientes de páginas
-* Sistema de páginas escalable (`enum Page`)
-* Botones con:
-
-  * debounce implícito
-  * detección de click corto / largo
+✅ **Configuración sin código**: Cambia fuentes de datos editando solo `config.h`
+✅ **Páginas ilimitadas**: Agrega cuantas necesites
+✅ **Testing independiente**: Sensores directos funcionan sin MS2
+✅ **Extensible**: Fácil agregar CAN bus, ESP32, más protocolos
+✅ **Mantenible**: Cada módulo tiene una responsabilidad clara
+✅ **Reutilizable**: Los valores se pueden mostrar en múltiples páginas
 
 ---
-
-## 🚀 Extensiones previstas
-
-Fácil de agregar:
-
-* alarmas visuales (parpadeo / latch)
-* buzzer
-* más páginas
-* lectura serial desde MegaSquirt
-* migración a ESP32
 * ADC externo (ADS1115) si se requieren más canales
 
 ---
