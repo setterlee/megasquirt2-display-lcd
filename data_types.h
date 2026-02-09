@@ -28,6 +28,20 @@ enum ValueType {
   VALUE_NONE             // Sin valor
 };
 
+// Severidad de alerta
+enum AlertSeverity {
+  ALERT_WARNING,       // Advertencia (amarillo/titilado lento)
+  ALERT_CRITICAL       // Crítico (rojo/titilado rápido)
+};
+
+// Tipos de alertas compuestas
+enum CompoundAlertType {
+  ALERT_COLD_ENGINE_HIGH_LOAD,  // Motor frío + carga alta
+  ALERT_LOW_OIL_PRESSURE,       // Baja presión aceite + RPM altas
+  ALERT_HIGH_TEMP_COMBO,        // Temp aceite + coolant altas
+  COMPOUND_ALERT_COUNT
+};
+
 // Fuentes de datos
 enum DataSource {
   SOURCE_DIRECT,       // Sensor conectado directamente (pin analógico)
@@ -70,6 +84,15 @@ struct DisplayItem {
   ValueType value;     // Qué valor mostrar
   bool showUnit;       // Mostrar unidad?
   bool showSign;       // Mostrar signo + para positivos?
+};
+
+// Rango de alerta para un sensor
+struct AlertRange {
+  ValueType type;      // Tipo de valor a monitorear
+  float min;           // Valor mínimo seguro
+  float max;           // Valor máximo seguro
+  AlertSeverity severity; // Severidad de la alerta
+  bool enabled;        // Activar alerta?
 };
 
 // Configuración de una línea del LCD (2 valores)

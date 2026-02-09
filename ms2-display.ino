@@ -11,12 +11,14 @@
 #include "sensor_direct.h"
 #include "sensor_ms2.h"
 #include "data_manager.h"
+#include "alert_manager.h"
 #include "display_helper.h"
 
 // ========== GLOBAL OBJECTS ==========
 
 LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLS, LCD_ROWS);
 DataManager dataManager;
+AlertManager alertManager(&dataManager);
 DisplayHelper display(&lcd, &dataManager);
 
 // ========== STATE ==========
@@ -58,6 +60,16 @@ void loop() {
 
     // Actualizar datos
     dataManager.update();
+    
+    // Verificar alertas
+    alertManager.update();
+    
+    // Controlar backlight según alertas
+    if (alertManager.shouldBlink()) {
+      display.setBacklight(true);
+    } else {
+      display.setBacklight(false);
+    }
 
     // Manejar timeout de peaks
     if (showPeaks && millis() - peakViewStart > PEAK_VIEW_TIME) {
@@ -73,7 +85,11 @@ void loop() {
 
     // Renderizar pantalla
     if (!showUnitChange) {
-      if (showPeaks) {
+      if (alertManager.isAlertActive()) {
+        // Mostrar alerta en lugar de la página
+        display.showAlert(alertManager.getAlertLine1(), alertManager.getAlertLine2());
+      }
+      else if (showPeaks) {
         display.renderPeaks(currentPage);
       } else {
         display.renderPage(currentPage);

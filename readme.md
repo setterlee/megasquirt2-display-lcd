@@ -27,10 +27,14 @@ Incluye:
    - [Sensores directos](#sensores-directos-analógicos)
    - [Valores desde MS2](#valores-desde-megasquirt-2)
    - [Engine Status Flags](#engine-status-flags)
-6. [Funcionalidad](#-funcionalidad)
-7. [Fuentes de datos](#-fuentes-de-datos)
-8. [Agregar nuevo valor](#-cómo-agregar-un-nuevo-valor)
-9. [Ventajas](#-ventajas-de-la-arquitectura-modular)
+6. [Sistema de Alertas](#-sistema-de-alertas)
+   - [Alertas simples (rangos)](#alertas-simples-rangos)
+   - [Alertas compuestas](#alertas-compuestas)
+   - [Casos de prueba en Test Mode](#casos-de-prueba-en-test-mode)
+7. [Funcionalidad](#-funcionalidad)
+8. [Fuentes de datos](#-fuentes-de-datos)
+9. [Agregar nuevo valor](#-cómo-agregar-un-nuevo-valor)
+10. [Ventajas](#-ventajas-de-la-arquitectura-modular)
 
 ---
 
@@ -39,12 +43,13 @@ Incluye:
 ### Estructura del proyecto
 ```
 ms2-display/
-├── main.ino              # Loop principal, setup, UI
+├── ms2-display.ino       # Loop principal, setup, UI
 ├── config.h              # Configuración de páginas y data sources
 ├── data_types.h          # Enums y estructuras de datos
 ├── sensor_direct.h       # Lectura de sensores directos (analog pins)
 ├── sensor_ms2.h          # Comunicación con MegaSquirt 2 (serial)
 ├── data_manager.h        # Gestor de datos (unifica sensores directos + MS2)
+├── alert_manager.h       # Sistema de alertas (rangos + compuestas)
 └── display_helper.h      # Funciones auxiliares de display
 ```
 
@@ -281,6 +286,129 @@ RDY LCH FSH     ← Launch control activo, flat shift
 - Fuel Pressure: 45-50 PSI
 - Pulse Width: 8-12 ms
 - Status: RDY TPS
+
+---
+
+## 🚨 Sistema de Alertas
+
+El sistema de alertas monitorea continuamente los sensores y activa el **titilado del backlight** cuando detecta condiciones peligrosas.
+
+### Alertas simples (rangos)
+
+Definidas en `ALERT_RANGES[]` en [config.h](config.h), monitorean valores fuera de rango:
+
+| Sensor | Min | Max | Severidad | Descripción |
+|--------|-----|-----|-----------|-------------|
+| OIL_PRESSURE | 10 PSI | - | 🚨 CRITICAL | Presión de aceite críticamente baja |
+| OIL_TEMP | - | 125°C | ⚠️ WARNING | Temperatura aceite alta |
+| OIL_TEMP | - | 135°C | 🚨 CRITICAL | Temperatura aceite crítica |
+| COOLANT_TEMP | - | 105°C | ⚠️ WARNING | Temperatura coolant alta |
+| COOLANT_TEMP | - | 115°C | 🚨 CRITICAL | Temperatura coolant crítica |
+| BATTERY | 11.5V | 15.5V | ⚠️ WARNING | Voltaje fuera de rango |
+| AFR | 11.0 | 16.0 | ⚠️ WARNING | Mezcla muy rica o muy pobre |
+
+**Velocidad de titilado:**
+- ⚠️ **WARNING**: 500ms (1 parpadeo por segundo)
+- 🚨 **CRITICAL**: 200ms (2.5 parpadeos por segundo)
+
+### Alertas compuestas
+
+Verifican **combinaciones de valores** para detectar situaciones peligrosas:
+
+#### 1. Motor frío + carga alta
+```cpp
+if (COOLANT_TEMP < 85°C && OIL_TEMP < 85°C) 
+   && (TPS > 50% || MAP > 5 PSI)
+→ ⚠️ WARNING: No aceleres fuerte con motor frío
+```
+
+**Por qué es peligroso:**
+- Aceite más viscoso → menor lubricación
+- Desgaste prematuro de cilindros y anillos
+- Mayor consumo de combustible
+
+#### 2. Baja presión aceite + RPM altas
+```cpp
+if (OIL_PRESSURE < 10 PSI && RPM > 2000)
+→ 🚨 CRITICAL: Posible falla de bomba o nivel bajo
+```
+
+**Por qué es peligroso:**
+- Lubricación insuficiente en componentes críticos
+- Riesgo de fundición de bielas/cojinetes
+- Daño catastrófico del motor
+
+#### 3. Temperaturas combinadas altas
+```cpp
+if (COOLANT_TEMP > 105°C && OIL_TEMP > 120°C)
+→ 🚨 CRITICAL: Sistema de enfriamiento comprometido
+```
+
+**Por qué es peligroso:**
+- Riesgo de ebullición del coolant
+- Degradación acelerada del aceite
+- Posible detonación por alta temperatura
+
+### Casos de prueba en Test Mode
+
+El **Test Mode** simula 4 escenarios en ciclo para verificar las alertas:
+
+#### 📊 Ciclo de prueba (testStep 0.0 → 1.0)
+
+**Paso 1: Motor frío + aceleración** (0.0 - 0.2)
+```
+COOLANT: 65°C  OIL: 70°C  TPS: 60%  MAP: +6 PSI
+→ ⚠️ Alerta: COLD_ENGINE_HIGH_LOAD
+→ Backlight: Titila lento (500ms)
+```
+
+**Paso 2: Baja presión aceite** (0.2 - 0.4)
+```
+OIL_PRESSURE: 8 PSI  RPM: 4000
+→ 🚨 Alerta: LOW_OIL_PRESSURE
+→ Backlight: Titila rápido (200ms)
+```
+
+**Paso 3: Sobrecalentamiento** (0.4 - 0.6)
+```
+COOLANT: 110°C  OIL: 130°C
+→ 🚨 Alerta: HIGH_TEMP_COMBO
+→ Backlight: Titila rápido (200ms)
+```
+
+**Paso 4: Operación normal** (0.6 - 1.0)
+```
+Todos los valores en rangos seguros
+→ ✅ Sin alertas
+→ Backlight: Siempre encendido
+```
+
+### Configurar alertas
+
+**Deshabilitar una alerta:**
+```cpp
+{VALUE_OIL_TEMP, ALERT_WARNING, 40.0, 125.0, false},  // enabled = false
+```
+
+**Cambiar umbrales:**
+```cpp
+{VALUE_OIL_PRESSURE, ALERT_CRITICAL, 15.0, 87.0, true},  // min: 10→15 PSI
+```
+
+**Agregar nueva alerta compuesta en [alert_manager.h](alert_manager.h):**
+```cpp
+bool checkMyCustomAlert() {
+  float value1 = dataManager->getValue(VALUE_XXX);
+  float value2 = dataManager->getValue(VALUE_YYY);
+  return (value1 > threshold && value2 < threshold);
+}
+
+// Agregar en update():
+if (checkMyCustomAlert()) {
+  alertActive = true;
+  currentSeverity = ALERT_WARNING;
+}
+```
 
 ---
 

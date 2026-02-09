@@ -219,6 +219,36 @@ public:
   bool isPSI() {
     return usePSI;
   }
+  
+  // Control de backlight
+  void setBacklight(bool on) {
+    if (on) {
+      lcd->backlight();
+    } else {
+      lcd->noBacklight();
+    }
+  }
+  
+  // Mostrar alerta en pantalla
+  void showAlert(const char* line1, const char* line2) {
+    lcd->clear();
+    
+    if (line1) {
+      lcd->setCursor(0, 0);
+      // Leer desde PROGMEM
+      char buf[17];
+      strcpy_P(buf, line1);
+      lcd->print(buf);
+    }
+    
+    if (line2) {
+      lcd->setCursor(0, 1);
+      // Leer desde PROGMEM
+      char buf[17];
+      strcpy_P(buf, line2);
+      lcd->print(buf);
+    }
+  }
 };
 
 #endif

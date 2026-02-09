@@ -80,6 +80,26 @@ const ValueConfig VALUE_CONFIGS[] PROGMEM PROGMEM = {
 
 const uint8_t VALUE_CONFIG_COUNT = sizeof(VALUE_CONFIGS) / sizeof(VALUE_CONFIGS[0]);
 
+// ========== ALERT DEFINITIONS ==========
+
+// Rangos de alerta para sensores individuales
+const AlertRange ALERT_RANGES[] PROGMEM = {
+  // type                min    max      severity         enabled
+  {VALUE_OIL_PRESSURE,   10.0,  87.0,    ALERT_CRITICAL,  true},   // < 10 PSI crítico
+  {VALUE_OIL_TEMP,       40.0,  125.0,   ALERT_WARNING,   true},   // > 125°C advertencia
+  {VALUE_OIL_TEMP,       40.0,  135.0,   ALERT_CRITICAL,  true},   // > 135°C crítico
+  {VALUE_COOLANT_TEMP,   60.0,  105.0,   ALERT_WARNING,   true},   // > 105°C advertencia
+  {VALUE_COOLANT_TEMP,   60.0,  115.0,   ALERT_CRITICAL,  true},   // > 115°C crítico
+  {VALUE_BATTERY,        11.5,  15.5,    ALERT_WARNING,   true},   // < 11.5V o > 15.5V
+  {VALUE_AFR,            11.0,  16.0,    ALERT_WARNING,   true},   // Fuera de rango seguro
+};
+
+const uint8_t ALERT_RANGE_COUNT = sizeof(ALERT_RANGES) / sizeof(ALERT_RANGES[0]);
+
+// Intervalos de blink para alertas
+#define ALERT_BLINK_WARNING   500  // ms - titilado lento
+#define ALERT_BLINK_CRITICAL  200  // ms - titilado rápido
+
 // ========== PAGE DEFINITIONS ==========
 
 // Configuración de páginas

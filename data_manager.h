@@ -56,28 +56,64 @@ private:
     if (testStep >= 1.0) testUp = false;
     if (testStep <= 0.0) testUp = true;
 
-    // Generar valores test para cada tipo (rangos realistas)
-    setValue(VALUE_MAP, -8.7 + testStep * 26.1);           // -8.7 a +17.4 PSI (vacío a boost)
-    setValue(VALUE_OIL_PRESSURE, 14.5 + testStep * 58.5);  // 14.5 a 73.0 PSI (ralentí a alta)
-    setValue(VALUE_OIL_TEMP, 60.0 + testStep * 50.0);      // 60 a 110°C (normal a alta)
-    setValue(VALUE_AIR_TEMP, 10.0 + testStep * 40.0);      // 10 a 50°C (frío a caliente)
-    setValue(VALUE_BATTERY, 12.5 + testStep * 2.0);        // 12.5 a 14.5V (descarga a carga)
-    setValue(VALUE_RPM, 800.0 + testStep * 6000.0);        // 800 a 6800 RPM
-    setValue(VALUE_TPS, testStep * 100.0);                 // 0 a 100%
-    setValue(VALUE_COOLANT_TEMP, 70.0 + testStep * 30.0);  // 70 a 100°C (frío a caliente)
-    setValue(VALUE_AFR, 12.0 + testStep * 5.0);            // 12.0 a 17.0 AFR (rico a pobre)
-    setValue(VALUE_IGNITION, 10.0 + testStep * 25.0);      // 10 a 35° (ralentí a máximo)
-    setValue(VALUE_FUEL_PRESSURE, 35.0 + testStep * 15.0); // 35 a 50 PSI (ralentí a máximo)
-    setValue(VALUE_PULSE_WIDTH, 2.0 + testStep * 8.0);     // 2 a 10 ms (ralentí a carga)
+    // CASO DE PRUEBA 1: Motor frío + aceleración fuerte (testStep 0.0-0.2)
+    // Simula: Motor recién arrancado, temperaturas bajas, usuario acelera
+    if (testStep <= 0.2) {
+      setValue(VALUE_COOLANT_TEMP, 65.0);              // Motor frío (< 85°C)
+      setValue(VALUE_OIL_TEMP, 70.0);                  // Aceite frío (< 85°C)
+      setValue(VALUE_TPS, 60.0 + testStep * 200);     // TPS sube a > 50%
+      setValue(VALUE_MAP, 3.0 + testStep * 50);       // MAP sube a > 5 PSI
+      setValue(VALUE_OIL_PRESSURE, 25.0);
+      setValue(VALUE_RPM, 2500.0);
+      // ⚠️ ALERTA: COLD_ENGINE_HIGH_LOAD debe activarse
+    }
+    // CASO DE PRUEBA 2: Baja presión aceite + RPM altas (testStep 0.2-0.4)
+    else if (testStep <= 0.4) {
+      setValue(VALUE_OIL_PRESSURE, 8.0);               // Presión crítica (< 10 PSI)
+      setValue(VALUE_RPM, 4000.0);                     // RPM altas (> 2000)
+      setValue(VALUE_COOLANT_TEMP, 90.0);
+      setValue(VALUE_OIL_TEMP, 100.0);
+      setValue(VALUE_TPS, 30.0);
+      setValue(VALUE_MAP, -2.0);
+      // 🚨 ALERTA CRÍTICA: LOW_OIL_PRESSURE debe activarse
+    }
+    // CASO DE PRUEBA 3: Temperaturas combinadas altas (testStep 0.4-0.6)
+    else if (testStep <= 0.6) {
+      setValue(VALUE_COOLANT_TEMP, 110.0);             // Coolant crítico (> 105°C)
+      setValue(VALUE_OIL_TEMP, 130.0);                 // Aceite crítico (> 120°C)
+      setValue(VALUE_OIL_PRESSURE, 35.0);
+      setValue(VALUE_RPM, 3500.0);
+      setValue(VALUE_TPS, 45.0);
+      setValue(VALUE_MAP, 2.0);
+      // 🚨 ALERTA CRÍTICA: HIGH_TEMP_COMBO debe activarse
+    }
+    // CASO DE PRUEBA 4: Operación normal (testStep 0.6-1.0)
+    else {
+      setValue(VALUE_COOLANT_TEMP, 85.0 + testStep * 10.0);   // 85-95°C normal
+      setValue(VALUE_OIL_TEMP, 90.0 + testStep * 15.0);       // 90-105°C normal
+      setValue(VALUE_OIL_PRESSURE, 25.0 + testStep * 30.0);   // 25-55 PSI normal
+      setValue(VALUE_RPM, 1500.0 + testStep * 3000.0);        // 1500-4500 RPM
+      setValue(VALUE_TPS, testStep * 40.0);                   // 0-40% TPS moderado
+      setValue(VALUE_MAP, -5.0 + testStep * 15.0);            // -5 a +10 PSI
+      // ✅ Sin alertas: todo en rangos normales
+    }
+
+    // Valores comunes para todos los casos
+    setValue(VALUE_AIR_TEMP, 20.0 + testStep * 30.0);
+    setValue(VALUE_BATTERY, 13.5 + testStep * 1.0);
+    setValue(VALUE_AFR, 13.5 + testStep * 2.0);
+    setValue(VALUE_IGNITION, 15.0 + testStep * 20.0);
+    setValue(VALUE_FUEL_PRESSURE, 40.0 + testStep * 10.0);
+    setValue(VALUE_PULSE_WIDTH, 3.0 + testStep * 6.0);
     
     // Engine status flags individuales - ciclar para testing
-    setValue(VALUE_ENGINE_READY, 1.0);                      // Siempre activo en test
-    setValue(VALUE_ENGINE_CRANK, testStep < 0.1 ? 1.0 : 0.0);  // Solo al inicio
-    setValue(VALUE_ENGINE_ASE, testStep < 0.3 ? 1.0 : 0.0);    // Primeros instantes
-    setValue(VALUE_ENGINE_WARMUP, testStep < 0.5 ? 1.0 : 0.0); // Calentamiento
-    setValue(VALUE_ENGINE_TPS_AE, testStep > 0.5 ? 1.0 : 0.0); // Aceleración
-    setValue(VALUE_ENGINE_LAUNCH, testStep > 0.8 ? 1.0 : 0.0); // Alta carga
-    setValue(VALUE_ENGINE_FLATSHIFT, 0.0);                      // Raramente activo
+    setValue(VALUE_ENGINE_READY, 1.0);
+    setValue(VALUE_ENGINE_CRANK, testStep < 0.1 ? 1.0 : 0.0);
+    setValue(VALUE_ENGINE_ASE, testStep < 0.3 ? 1.0 : 0.0);
+    setValue(VALUE_ENGINE_WARMUP, testStep < 0.5 ? 1.0 : 0.0);
+    setValue(VALUE_ENGINE_TPS_AE, testStep > 0.5 ? 1.0 : 0.0);
+    setValue(VALUE_ENGINE_LAUNCH, testStep > 0.8 ? 1.0 : 0.0);
+    setValue(VALUE_ENGINE_FLATSHIFT, 0.0);
   }
 
   // Actualizar valores reales desde sensores
