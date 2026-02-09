@@ -59,7 +59,7 @@ const char label_FSH[] PROGMEM = "FSH";
 const ValueConfig VALUE_CONFIGS[] PROGMEM PROGMEM = {
   // type              source          label      unit          pin  minRaw maxRaw  minReal maxReal decimals
   {VALUE_MAP,          SOURCE_MS2,     label_MAP, UNIT_KPA,     0,   0,     1500,   25.0,   350.0,  0},
-  {VALUE_OIL_PRESSURE, SOURCE_DIRECT,  label_OIL, UNIT_PSI,     A1,  0,     1023,   0.0,    87.0,   1},
+  {VALUE_OIL_PRESSURE, SOURCE_DIRECT,  label_OIL, UNIT_PSI,     A1,  0,     1023,   0.0,    87.0,   0},
   {VALUE_OIL_TEMP,     SOURCE_DIRECT,  label_OLT, UNIT_CELSIUS, A2,  0,     1023,   20.0,   140.0,  0},
   {VALUE_AIR_TEMP,     SOURCE_MS2,     label_IAT, UNIT_CELSIUS, 0,   0,     1023,   -10.0,  80.0,   0},
   {VALUE_BATTERY,      SOURCE_DIRECT,  label_BAT, UNIT_VOLT,    A3,  0,     1023,   0.0,    20.0,   1},
@@ -70,7 +70,7 @@ const ValueConfig VALUE_CONFIGS[] PROGMEM PROGMEM = {
   {VALUE_IGNITION,     SOURCE_MS2,     label_IGN, UNIT_DEGREES, 0,   -10,   50,     -10.0,  50.0,   1},
   {VALUE_DWELL,        SOURCE_MS2,     label_DWL, UNIT_MS,      0,   0,     100,    0.0,    10.0,   0},
   {VALUE_FUEL_PRESSURE,  SOURCE_MS2,   label_FUP, UNIT_PSI,     0,   0,     1023,   0.0,    100.0,  0},
-  {VALUE_PULSE_WIDTH,    SOURCE_MS2,   label_PW1, UNIT_MS,      0,   0,     2550,   0.0,    25.5,   0},
+  {VALUE_PULSE_WIDTH,    SOURCE_MS2,   label_PW1, UNIT_MS,      0,   0,     2550,   0.0,    25.5,   1},
   {VALUE_ENGINE_READY,   SOURCE_MS2,   label_RDY, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
   {VALUE_ENGINE_CRANK,   SOURCE_MS2,   label_CRK, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
   {VALUE_ENGINE_ASE,     SOURCE_MS2,   label_ASE, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
@@ -162,7 +162,7 @@ const PageConfig PAGES[] PROGMEM = {
     },
     // Línea 2: MAP + AFR (carga y mezcla relacionadas)
     {
-      {VALUE_MAP, true, true},       // Boost/vacío
+      {VALUE_MAP, true, false},       // Boost/vacío
       {VALUE_AFR, false, false}      // Mezcla resultante
     }
   },
