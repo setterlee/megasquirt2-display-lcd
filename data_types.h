@@ -25,6 +25,8 @@ enum ValueType {
   VALUE_ENGINE_TPS_AE,   // TPS Acceleration Enrichment flag (MS2)
   VALUE_ENGINE_LAUNCH,   // Launch Control flag (MS2)
   VALUE_ENGINE_FLATSHIFT,// Flat Shift flag (MS2)
+  VALUE_IDLE_PWM,        // Idle PWM (MS2)
+  VALUE_CL_IDLE,         // Closed Loop Idle flag (MS2)
   VALUE_NONE             // Sin valor
 };
 
