@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Script for Linux users to reset the latency on MS3's USB-serial port.
+# From a terminal:   . ./linux-latency
+
+run_the_echo()
+{
+FILE=/sys/bus/usb-serial/devices/$1/latency_timer
+
+if test -f $FILE; then
+	echo "Resetting latency on /dev/$1"
+	echo 1 > $FILE
+fi
+}
+
+set_the_latency()
+{
+# Try a few likely ports
+run_the_echo ttyUSB0
+run_the_echo ttyUSB1
+run_the_echo ttyUSB2
+}
+
+
+#Main starts here.
+if [ "$USER" = "root" ]; then
+	set_the_latency
+else
+ echo "Enter your password to adjust latency on the MS3 FTDI USB-serial port."
+ sudo $0
+fi

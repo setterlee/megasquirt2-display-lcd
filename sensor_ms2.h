@@ -9,9 +9,9 @@
 
 // MegaSquirt 2 usa protocolo serial binario
 // Comando 'A' request realtime data block
-// Respuesta: 75 bytes de datos
+// Respuesta: 212 bytes de datos (MS2 Extra firmware 3.4.4)
 
-// Engine status flags (MS2 engine byte - offset 10)
+// Engine status flags (MS2 engine byte - offset 11)
 enum EngineStatusFlag {
   READY    = 0,  // bit 0
   CRANK    = 1,  // bit 1
@@ -22,35 +22,46 @@ enum EngineStatusFlag {
   FLATSHIFT= 7   // bit 7
 };
 
-// Offsets en el data block (MS2 Extra firmware)
-#define MS2_SECONDS       0   // 1 byte
-#define MS2_PW1_MSB       1   // 2 bytes - Pulse Width 1
-#define MS2_PW1_LSB       2
-#define MS2_RPM_MSB       6   // 2 bytes - RPM
-#define MS2_RPM_LSB       7
-#define MS2_ADV_MSB       8   // 2 bytes - Spark Advance
-#define MS2_ADV_LSB       9
-#define MS2_ENGINE        10  // 1 byte - Engine status
-#define MS2_AFR_TARGET1   11  // 1 byte - AFR Target
-#define MS2_AFR1          12  // 1 byte - AFR actual
-#define MS2_BARO_MSB      13  // 2 bytes - Barometric
-#define MS2_BARO_LSB      14
-#define MS2_MAP_MSB       15  // 2 bytes - MAP
-#define MS2_MAP_LSB       16
-#define MS2_MAT_MSB       17  // 2 bytes - Manifold Air Temp
-#define MS2_MAT_LSB       18
-#define MS2_CLT_MSB       19  // 2 bytes - Coolant Temp
-#define MS2_CLT_LSB       20
-#define MS2_TPS_MSB       21  // 2 bytes - TPS
-#define MS2_TPS_LSB       22
-#define MS2_BAT_MSB       23  // 2 bytes - Battery Voltage
-#define MS2_BAT_LSB       24
-#define MS2_DWELL_MSB     25  // 2 bytes - Dwell
-#define MS2_DWELL_LSB     26
-#define MS2_FUELPRES_MSB  27  // 2 bytes - Fuel Pressure (if available)
-#define MS2_FUELPRES_LSB  28
+// Status2 flags (MS2 status2 byte - offset 79)
+enum Status2Flag {
+  CL_IDLE  = 7   // bit 7 - Closed Loop Idle active
+};
 
-#define MS2_DATA_SIZE     75  // Tamaño del bloque de datos
+// Offsets en el data block (MS2 Extra firmware 3.4.4)
+#define MS2_SECONDS       0   // U16 - seconds
+#define MS2_PW1_MSB       2   // U16 - Pulse Width 1 (ms * 1500)
+#define MS2_PW1_LSB       3
+#define MS2_RPM_MSB       6   // U16 - RPM
+#define MS2_RPM_LSB       7
+#define MS2_ADV_MSB       8   // S16 - Spark Advance (deg * 10)
+#define MS2_ADV_LSB       9
+#define MS2_ENGINE        11  // U08 - Engine status flags
+#define MS2_AFR_TARGET1   12  // U08 - AFR Target (afr * 10)
+#define MS2_AFR1          28  // S16 - AFR actual (afr * 10)
+#define MS2_AFR1_LSB      29
+#define MS2_BARO_MSB      16  // S16 - Barometric (kPa * 10)
+#define MS2_BARO_LSB      17
+#define MS2_MAP_MSB       18  // S16 - MAP (kPa * 10)
+#define MS2_MAP_LSB       19
+#define MS2_MAT_MSB       20  // S16 - Manifold Air Temp (°F * 10)
+#define MS2_MAT_LSB       21
+#define MS2_CLT_MSB       22  // S16 - Coolant Temp (°F * 10)
+#define MS2_CLT_LSB       23
+#define MS2_TPS_MSB       24  // S16 - TPS (% * 10)
+#define MS2_TPS_LSB       25
+#define MS2_BAT_MSB       26  // S16 - Battery Voltage (V * 10)
+#define MS2_BAT_LSB       27
+#define MS2_IACSTEP_MSB   54  // S16 - IAC step / Idle PWM (duty = value * 0.392)
+#define MS2_IACSTEP_LSB   55
+#define MS2_DWELL_MSB     62  // U16 - Dwell (ms * 15)
+#define MS2_DWELL_LSB     63
+#define MS2_STATUS2       79  // U08 - Status2 flags
+#define MS2_ADC6_MSB      128 // U16 - ADC6 (Fuel Pressure sensor)
+#define MS2_ADC6_LSB      129
+#define MS2_ADC7_MSB      130 // U16 - ADC7 (Oil Pressure sensor)
+#define MS2_ADC7_LSB      131
+
+#define MS2_DATA_SIZE     212  // Tamaño del bloque de datos
 
 // ========== SENSOR MS2 CLASS ==========
 
@@ -78,25 +89,30 @@ private:
     return (dataBlock[offset] << 8) | dataBlock[offset + 1];
   }
 
+  // Leer word signed (2 bytes) del data block
+  int16_t readWordSigned(uint8_t offset) {
+    return (int16_t)((dataBlock[offset] << 8) | dataBlock[offset + 1]);
+  }
+
   // Parsear valor desde data block según tipo
   float parseValue(ValueType type) {
     switch (type) {
       case VALUE_MAP: {
         // MAP en kPa * 10 desde MS2, devolver en kPa
-        uint16_t kpa10 = readWord(MS2_MAP_MSB);
+        int16_t kpa10 = readWordSigned(MS2_MAP_MSB);
         return kpa10 / 10.0; // Devolver en kPa directamente
       }
       
       case VALUE_AIR_TEMP: {
         // MAT en °F * 10, convertir a °C
-        uint16_t tempF10 = readWord(MS2_MAT_MSB);
+        int16_t tempF10 = readWordSigned(MS2_MAT_MSB);
         float tempF = tempF10 / 10.0;
         return (tempF - 32.0) * 5.0 / 9.0;
       }
       
       case VALUE_COOLANT_TEMP: {
         // CLT en °F * 10, convertir a °C
-        uint16_t tempF10 = readWord(MS2_CLT_MSB);
+        int16_t tempF10 = readWordSigned(MS2_CLT_MSB);
         float tempF = tempF10 / 10.0;
         return (tempF - 32.0) * 5.0 / 9.0;
       }
@@ -108,43 +124,65 @@ private:
       
       case VALUE_TPS: {
         // TPS en % * 10
-        uint16_t tps10 = readWord(MS2_TPS_MSB);
+        int16_t tps10 = readWordSigned(MS2_TPS_MSB);
         return tps10 / 10.0;
       }
       
+      case VALUE_BATTERY: {
+        // Battery en V * 10
+        int16_t batt10 = readWordSigned(MS2_BAT_MSB);
+        return batt10 / 10.0;
+      }
+      
       case VALUE_AFR: {
-        // AFR * 10
-        uint8_t afr10 = dataBlock[MS2_AFR1];
+        // AFR * 10 (S16)
+        int16_t afr10 = readWordSigned(MS2_AFR1);
         return afr10 / 10.0;
       }
       
       case VALUE_IGNITION: {
         // Advance en grados * 10
-        uint16_t adv10 = readWord(MS2_ADV_MSB);
+        int16_t adv10 = readWordSigned(MS2_ADV_MSB);
         return adv10 / 10.0;
       }
       
       case VALUE_DWELL: {
-        // Dwell en ms * 10
-        uint16_t dwell10 = readWord(MS2_DWELL_MSB);
-        return dwell10 / 10.0;
+        // Dwell en ms * 15 (0.0666 scale)
+        uint16_t dwell15 = readWord(MS2_DWELL_MSB);
+        return dwell15 * 0.0666;
       }
       
       case VALUE_FUEL_PRESSURE: {
-        // Fuel pressure en kPa * 10 desde MS2
-        uint16_t kpa10 = readWord(MS2_FUELPRES_MSB);
-        float kpa = kpa10 / 10.0;
-        // Convertir a PSI (unidad base para fuel pressure)
-        return kpa / 6.89476; // kPa a PSI
+        // Fuel pressure desde ADC6 (raw ADC 0-1023)
+        // Convertir a PSI usando fórmula del custom.ini:
+        // PSI = 0 + (150 - 0) * ((adc6 - 102.3) / (920.7 - 102.3))
+        uint16_t adc6 = readWord(MS2_ADC6_MSB);
+        float psi = 150.0 * ((float)adc6 - 102.3) / (920.7 - 102.3);
+        return psi < 0 ? 0 : psi;
+      }
+      
+      case VALUE_OIL_PRESSURE: {
+        // Oil pressure desde ADC7 (raw ADC 0-1023)
+        // Convertir a PSI usando fórmula del custom.ini:
+        // PSI = 0 + (150 - 0) * ((adc7 - 102.3) / (920.7 - 102.3))
+        uint16_t adc7 = readWord(MS2_ADC7_MSB);
+        float psi = 150.0 * ((float)adc7 - 102.3) / (920.7 - 102.3);
+        return psi < 0 ? 0 : psi;
       }
       
       case VALUE_PULSE_WIDTH: {
-        // Pulse Width en 0.1ms
-        uint16_t pw10 = readWord(MS2_PW1_MSB);
-        return pw10 / 10.0; // Convertir a ms
+        // Pulse Width en 0.000666 scale
+        uint16_t pw = readWord(MS2_PW1_MSB);
+        return pw * 0.000666; // Convertir a ms
       }
       
-      // Engine status flags individuales (MS2 engine byte - offset 10)
+      case VALUE_IDLE_PWM: {
+        // Idle PWM duty cycle (iacstep * 0.392)
+        int16_t iacstep = readWordSigned(MS2_IACSTEP_MSB);
+        return iacstep * 0.392;
+      }
+      
+      // Engine status flags individuales (MS2 engine byte - offset 11)
       case VALUE_ENGINE_READY:
         return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::READY))) ? 1.0 : 0.0;
       case VALUE_ENGINE_CRANK:
@@ -159,6 +197,10 @@ private:
         return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::LAUNCH))) ? 1.0 : 0.0;
       case VALUE_ENGINE_FLATSHIFT:
         return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLATSHIFT))) ? 1.0 : 0.0;
+      
+      // Status2 flags (MS2 status2 byte - offset 79)
+      case VALUE_CL_IDLE:
+        return (dataBlock[MS2_STATUS2] & (1 << static_cast<int>(Status2Flag::CL_IDLE))) ? 1.0 : 0.0;
       
       default:
         return 0.0;
