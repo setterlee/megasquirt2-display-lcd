@@ -28,7 +28,7 @@ private:
       case UNIT_CELSIUS:    return "C";
       case UNIT_FAHRENHEIT: return "F";
       case UNIT_VOLT:       return "V";
-      case UNIT_RPM:        return "r";
+      case UNIT_RPM:        return "";
       case UNIT_PERCENT:    return "%";
       case UNIT_DEGREES:    return "d";
       case UNIT_MS:         return "m";
