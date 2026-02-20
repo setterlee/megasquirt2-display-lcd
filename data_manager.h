@@ -66,45 +66,55 @@ private:
     if (testStep >= 1.0) testUp = false;
     if (testStep <= 0.0) testUp = true;
 
-    // CASO DE PRUEBA 1: Motor frío + aceleración fuerte (testStep 0.0-0.2)
-    // Simula: Motor recién arrancado, temperaturas bajas, usuario acelera
-    if (testStep <= 0.2) {
-      setValue(VALUE_COOLANT_TEMP, 65.0);              // Motor frío (< 85°C)
-      setValue(VALUE_OIL_TEMP, 70.0);                  // Aceite frío (< 85°C)
-      setValue(VALUE_TPS, 60.0 + testStep * 200);     // TPS sube a > 50%
-      setValue(VALUE_MAP, 80.0 + testStep * 100);     // MAP 80-100 kPa (boost bajo)
-      setValue(VALUE_OIL_PRESSURE, 25.0);
-      setValue(VALUE_RPM, 2500.0);
-      // ⚠️ ALERTA: COLD_ENGINE_HIGH_LOAD debe activarse
+    // CASO DE PRUEBA 1: ⚠️ UNDERBOOST (testStep 0.0-0.30)
+    // Condiciones: TPS > 70, RPM > 3000, target > 150, MAP < (target - 15)
+    // Duración: ~7.2 segundos (suficiente para timer de 800ms)
+    if (testStep <= 0.30) {
+      setValue(VALUE_COOLANT_TEMP, 90.0);              // Temp normal
+      setValue(VALUE_OIL_TEMP, 100.0);                 // Temp normal
+      setValue(VALUE_OIL_PRESSURE, 40.0);              // Presión normal
+      setValue(VALUE_RPM, 4500.0);                     // > 3000 ✓
+      setValue(VALUE_TPS, 85.0);                       // > 70 ✓
+      setValue(VALUE_MAP_TARGET, 180.0);               // > 150 ✓
+      setValue(VALUE_MAP, 155.0);                      // 180 - 25 = underboost de 25 kPa
+      // ⚠️ ALERTA WARNING: UNDERBOOST debe activarse después de 800ms
     }
-    // CASO DE PRUEBA 2: Baja presión aceite + RPM altas (testStep 0.2-0.4)
-    else if (testStep <= 0.4) {
-      setValue(VALUE_OIL_PRESSURE, 8.0);               // Presión crítica (< 10 PSI)
-      setValue(VALUE_RPM, 4000.0);                     // RPM altas (> 2000)
-      setValue(VALUE_COOLANT_TEMP, 90.0);
-      setValue(VALUE_OIL_TEMP, 100.0);
-      setValue(VALUE_TPS, 30.0);
-      setValue(VALUE_MAP, 50.0);                       // MAP 50 kPa (vacío parcial)
-      // 🚨 ALERTA CRÍTICA: LOW_OIL_PRESSURE debe activarse
+    // CASO DE PRUEBA 2: 🚨 OVERBOOST (testStep 0.30-0.60)
+    // Condiciones: TPS > 70, RPM > 3000, target > 150, MAP > (target + 12)
+    // Duración: ~7.2 segundos (suficiente para timer de 400ms)
+    else if (testStep <= 0.60) {
+      setValue(VALUE_COOLANT_TEMP, 95.0);              // Temp normal
+      setValue(VALUE_OIL_TEMP, 105.0);                 // Temp normal
+      setValue(VALUE_OIL_PRESSURE, 45.0);              // Presión normal
+      setValue(VALUE_RPM, 5000.0);                     // > 3000 ✓
+      setValue(VALUE_TPS, 90.0);                       // > 70 ✓
+      setValue(VALUE_MAP_TARGET, 170.0);               // > 150 ✓
+      setValue(VALUE_MAP, 188.0);                      // 170 + 18 = overboost de 18 kPa
+      // 🚨 ALERTA CRÍTICA: OVERBOOST debe activarse después de 400ms
     }
-    // CASO DE PRUEBA 3: Temperaturas combinadas altas (testStep 0.4-0.6)
-    else if (testStep <= 0.6) {
-      setValue(VALUE_COOLANT_TEMP, 110.0);             // Coolant crítico (> 105°C)
-      setValue(VALUE_OIL_TEMP, 130.0);                 // Aceite crítico (> 120°C)
-      setValue(VALUE_OIL_PRESSURE, 35.0);
-      setValue(VALUE_RPM, 3500.0);
-      setValue(VALUE_TPS, 45.0);
-      setValue(VALUE_MAP, 70.0);                       // MAP 70 kPa (carga moderada)
-      // 🚨 ALERTA CRÍTICA: HIGH_TEMP_COMBO debe activarse
+    // CASO DE PRUEBA 3: 🔥 OVERBOOST CRÍTICO (testStep 0.60-0.90)
+    // Condiciones: TPS > 70, RPM > 3000, target > 150, MAP > (target + 25)
+    // Duración: ~7.2 segundos (activación INMEDIATA sin timer)
+    else if (testStep <= 0.90) {
+      setValue(VALUE_COOLANT_TEMP, 95.0);              // Temp normal
+      setValue(VALUE_OIL_TEMP, 105.0);                 // Temp normal
+      setValue(VALUE_OIL_PRESSURE, 45.0);              // Presión normal
+      setValue(VALUE_RPM, 5500.0);                     // > 3000 ✓
+      setValue(VALUE_TPS, 95.0);                       // > 70 ✓
+      setValue(VALUE_MAP_TARGET, 170.0);               // > 150 ✓
+      setValue(VALUE_MAP, 200.0);                      // 170 + 30 = overboost CRÍTICO
+      // 🔥 ALERTA CRÍTICA INMEDIATA: OVERBOOST CRÍTICO (sin timer)
     }
-    // CASO DE PRUEBA 4: Operación normal (testStep 0.6-1.0)
+    // CASO DE PRUEBA 4: ✅ Operación normal (testStep 0.90-1.0)
+    // Duración: ~2.4 segundos
     else {
-      setValue(VALUE_COOLANT_TEMP, 85.0 + testStep * 10.0);   // 85-95°C normal
-      setValue(VALUE_OIL_TEMP, 90.0 + testStep * 15.0);       // 90-105°C normal
-      setValue(VALUE_OIL_PRESSURE, 25.0 + testStep * 30.0);   // 25-55 PSI normal
-      setValue(VALUE_RPM, 1500.0 + testStep * 3000.0);        // 1500-4500 RPM
-      setValue(VALUE_TPS, testStep * 40.0);                   // 0-40% TPS moderado
-      setValue(VALUE_MAP, 40.0 + testStep * 100.0);           // 40-140 kPa (vacío a boost moderado)
+      setValue(VALUE_COOLANT_TEMP, 90.0);              // Temp normal
+      setValue(VALUE_OIL_TEMP, 100.0);                 // Temp normal
+      setValue(VALUE_OIL_PRESSURE, 40.0);              // Presión normal
+      setValue(VALUE_RPM, 4000.0);                     // RPM normal
+      setValue(VALUE_TPS, 75.0);                       // TPS moderado
+      setValue(VALUE_MAP, 165.0);                      // MAP cerca del target
+      setValue(VALUE_MAP_TARGET, 165.0);               // Target = MAP (sin desviación)
       // ✅ Sin alertas: todo en rangos normales
     }
 
@@ -117,29 +127,27 @@ private:
     setValue(VALUE_FUEL_PRESSURE, 40.0 + testStep * 10.0);
     setValue(VALUE_PULSE_WIDTH, 3.0 + testStep * 6.0);
     
-    // Engine status flags - simulación realista de secuencia de arranque y operación
-    // READY: se activa después del arranque y queda ON
-    setValue(VALUE_ENGINE_READY, testStep >= 0.05 ? 1.0 : 0.0);
+    // Engine status flags - simplificados para no distraer de alertas de boost
+    // READY: siempre ON después del arranque
+    setValue(VALUE_ENGINE_READY, testStep >= 0.02 ? 1.0 : 0.0);
     
-    // CRANK: solo durante arranque inicial (primeros frames)
-    setValue(VALUE_ENGINE_CRANK, (testStep >= 0.0 && testStep < 0.05) ? 1.0 : 0.0);
+    // CRANK: solo durante arranque inicial
+    setValue(VALUE_ENGINE_CRANK, (testStep >= 0.0 && testStep < 0.02) ? 1.0 : 0.0);
     
-    // ASE (After Start Enrichment): activo brevemente después del arranque
-    setValue(VALUE_ENGINE_ASE, (testStep >= 0.06 && testStep < 0.16) ? 1.0 : 0.0);
+    // ASE: breve después del arranque
+    setValue(VALUE_ENGINE_ASE, (testStep >= 0.03 && testStep < 0.08) ? 1.0 : 0.0);
     
-    // WARMUP: activo mientras el motor se calienta (más largo)
-    setValue(VALUE_ENGINE_WARMUP, (testStep >= 0.17 && testStep < 0.48) ? 1.0 : 0.0);
+    // WARMUP: durante underboost
+    setValue(VALUE_ENGINE_WARMUP, (testStep >= 0.09 && testStep < 0.28) ? 1.0 : 0.0);
     
-    // TPS_AE (Acceleration Enrichment): solo durante aceleraciones fuertes
-    // Simula dos pisadas de acelerador en momentos diferentes
-    setValue(VALUE_ENGINE_TPS_AE, 
-      ((testStep >= 0.21 && testStep < 0.26) || (testStep >= 0.72 && testStep < 0.77)) ? 1.0 : 0.0);
+    // TPS_AE: activo durante overboost (aceleración fuerte)
+    setValue(VALUE_ENGINE_TPS_AE, (testStep >= 0.31 && testStep < 0.35) ? 1.0 : 0.0);
     
-    // LAUNCH: solo en condición específica (RPM alta + condiciones)
-    setValue(VALUE_ENGINE_LAUNCH, (testStep >= 0.83 && testStep < 0.88) ? 1.0 : 0.0);
+    // LAUNCH: activo durante overboost crítico
+    setValue(VALUE_ENGINE_LAUNCH, (testStep >= 0.62 && testStep < 0.67) ? 1.0 : 0.0);
     
-    // FLATSHIFT: muy raro, solo un momento específico
-    setValue(VALUE_ENGINE_FLATSHIFT, (testStep >= 0.93 && testStep < 0.96) ? 1.0 : 0.0);
+    // FLATSHIFT: al final
+    setValue(VALUE_ENGINE_FLATSHIFT, (testStep >= 0.92 && testStep < 0.95) ? 1.0 : 0.0);
   }
 
   // Actualizar valores reales desde sensores

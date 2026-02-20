@@ -21,6 +21,10 @@ const char alert_oil_temp[] PROGMEM = "*OIL TEMP HIGH!*";
 const char alert_coolant[] PROGMEM = "**COOLANT HIGH**";
 const char alert_battery[] PROGMEM = "**BATTERY VOLT**";
 const char alert_afr[] PROGMEM = "***AFR UNSAFE***";
+const char alert_boost_low[] PROGMEM = "Pres. Boost Baja!";
+const char alert_boost_low2[] PROGMEM = "Nooo..! Monica!!!";
+const char alert_boost_high[] PROGMEM = "Pres. Boost Alta!";
+const char alert_boost_high2[] PROGMEM = "Danger 2 Manifold";
 
 class AlertManager {
 private:
@@ -35,6 +39,15 @@ private:
   // Tracking de alerta activa
   const char* alertLine1;
   const char* alertLine2;
+  
+  // Boost monitoring state variables
+  bool underboost_active;
+  bool overboost_active;
+  bool overboost_critical;
+  unsigned long underboost_condition_start;
+  unsigned long overboost_condition_start;
+  bool underboost_condition_met;
+  bool overboost_condition_met;
 
   // Verificar una alerta simple (rango)
   bool checkRangeAlert(const AlertRange& alert) {
@@ -76,6 +89,105 @@ private:
     // Ambas temperaturas altas
     return (clt > 105.0 && olt > 120.0);
   }
+  
+  // 🎯 Evaluar alertas de boost con condiciones sofisticadas
+  // Retorna: 0 = OK, -1 = underboost, 1 = overboost, 2 = overboost crítico
+  int checkBoostDeviation() {
+    float mapActual = dataManager->getValue(VALUE_MAP);
+    float mapTarget = dataManager->getValue(VALUE_MAP_TARGET);
+    float tps = dataManager->getValue(VALUE_TPS);
+    float rpm = dataManager->getValue(VALUE_RPM);
+    
+    // 🎯 CONDICIONES GENERALES - Verificar si debemos evaluar boost
+    bool shouldEvaluate = (tps > 70.0) && (rpm > 3000.0) && (mapTarget > 150.0);
+    
+    if (!shouldEvaluate) {
+      // Resetear todo si no cumplimos condiciones
+      underboost_active = false;
+      overboost_active = false;
+      overboost_critical = false;
+      underboost_condition_met = false;
+      overboost_condition_met = false;
+      underboost_condition_start = 0;
+      overboost_condition_start = 0;
+      return 0;
+    }
+    
+    // Calcular desviación
+    float deviation = mapActual - mapTarget;
+    unsigned long now = millis();
+    
+    // 🔥 OVERBOOST CRÍTICO - Activación inmediata
+    if (deviation > 25.0) {
+      overboost_critical = true;
+      return 2;  // Crítico
+    }
+    
+    // Si el crítico estaba activo pero ya no, desactivarlo con histéresis
+    if (overboost_critical && deviation <= 5.0) {
+      overboost_critical = false;
+    }
+    
+    // Si crítico sigue activo, retornarlo
+    if (overboost_critical) {
+      return 2;
+    }
+    
+    // 🚨 OVERBOOST - Activar con +12 kPa durante 400ms
+    if (deviation > 12.0) {
+      if (!overboost_condition_met) {
+        // Primera vez que detectamos la condición
+        overboost_condition_met = true;
+        overboost_condition_start = now;
+      } else {
+        // Verificar si ha pasado el tiempo necesario
+        if (now - overboost_condition_start >= 400) {
+          overboost_active = true;
+        }
+      }
+    } else {
+      // Condición no se cumple, resetear
+      overboost_condition_met = false;
+      overboost_condition_start = 0;
+    }
+    
+    // Histéresis para desactivar overboost (volver a +5 kPa del target)
+    if (overboost_active && deviation <= 5.0) {
+      overboost_active = false;
+    }
+    
+    // 🚨 UNDERBOOST - Activar con -15 kPa durante 800ms
+    if (deviation < -15.0) {
+      if (!underboost_condition_met) {
+        // Primera vez que detectamos la condición
+        underboost_condition_met = true;
+        underboost_condition_start = now;
+      } else {
+        // Verificar si ha pasado el tiempo necesario
+        if (now - underboost_condition_start >= 800) {
+          underboost_active = true;
+        }
+      }
+    } else {
+      // Condición no se cumple, resetear
+      underboost_condition_met = false;
+      underboost_condition_start = 0;
+    }
+    
+    // Histéresis para desactivar underboost (volver a -5 kPa del target)
+    if (underboost_active && deviation >= -5.0) {
+      underboost_active = false;
+    }
+    
+    // Retornar estado actual
+    if (overboost_active) {
+      return 1;  // Overboost
+    } else if (underboost_active) {
+      return -1;  // Underboost
+    }
+    
+    return 0;  // OK
+  }
 
 public:
   AlertManager(DataManager* dm) {
@@ -88,6 +200,15 @@ public:
     wasAlertActive = false;
     alertLine1 = nullptr;
     alertLine2 = nullptr;
+    
+    // Inicializar boost monitoring
+    underboost_active = false;
+    overboost_active = false;
+    overboost_critical = false;
+    underboost_condition_start = 0;
+    overboost_condition_start = 0;
+    underboost_condition_met = false;
+    overboost_condition_met = false;
   }
 
   // Verificar todas las alertas
@@ -155,6 +276,25 @@ public:
       alertLine2 = alert_high_temp2;
     }
     
+    // Verificar desviación de boost (alerta especial)
+    int boostStatus = checkBoostDeviation();
+    if (boostStatus == -1) {  // Underboost
+      alertActive = true;
+      currentSeverity = ALERT_WARNING;
+      alertLine1 = alert_boost_low;
+      alertLine2 = alert_boost_low2;
+    } else if (boostStatus == 1) {  // Overboost
+      alertActive = true;
+      currentSeverity = ALERT_CRITICAL;
+      alertLine1 = alert_boost_high;
+      alertLine2 = alert_boost_high2;
+    } else if (boostStatus == 2) {  // Overboost crítico
+      alertActive = true;
+      currentSeverity = ALERT_CRITICAL;
+      alertLine1 = alert_boost_high;
+      alertLine2 = alert_boost_high2;
+    }
+    
     // Detectar nueva alerta para iniciar timer de blink
     if (alertActive && !previouslyActive) {
       alertStartTime = millis();
@@ -204,6 +344,15 @@ public:
     wasAlertActive = false;
     alertLine1 = nullptr;
     alertLine2 = nullptr;
+    
+    // Resetear boost monitoring
+    underboost_active = false;
+    overboost_active = false;
+    overboost_critical = false;
+    underboost_condition_start = 0;
+    overboost_condition_start = 0;
+    underboost_condition_met = false;
+    overboost_condition_met = false;
   }
   
   // Obtener mensajes de alerta

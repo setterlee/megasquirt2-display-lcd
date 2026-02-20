@@ -27,6 +27,7 @@ enum ValueType {
   VALUE_ENGINE_FLATSHIFT,// Flat Shift flag (MS2)
   VALUE_IDLE_PWM,        // Idle PWM (MS2)
   VALUE_CL_IDLE,         // Closed Loop Idle flag (MS2)
+  VALUE_MAP_TARGET,      // MAP Target (boost target) (MS2)
   VALUE_NONE             // Sin valor
 };
 

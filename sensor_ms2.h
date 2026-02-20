@@ -60,6 +60,8 @@ enum Status2Flag {
 #define MS2_ADC6_LSB      129
 #define MS2_ADC7_MSB      130 // U16 - ADC7 (Oil Pressure sensor)
 #define MS2_ADC7_LSB      131
+#define MS2_BOOST_TARG_MSB 180 // S16 - Boost Target (kPa * 10)
+#define MS2_BOOST_TARG_LSB 181
 
 #define MS2_DATA_SIZE     212  // Tamaño del bloque de datos
 
@@ -197,6 +199,12 @@ private:
         return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::LAUNCH))) ? 1.0 : 0.0;
       case VALUE_ENGINE_FLATSHIFT:
         return (dataBlock[MS2_ENGINE] & (1 << static_cast<int>(EngineStatusFlag::FLATSHIFT))) ? 1.0 : 0.0;
+      
+      case VALUE_MAP_TARGET: {
+        // Boost Target en kPa * 10 desde MS2, devolver en kPa
+        int16_t kpa10 = readWordSigned(MS2_BOOST_TARG_MSB);
+        return kpa10 / 10.0; // Devolver en kPa directamente
+      }
       
       // Status2 flags (MS2 status2 byte - offset 79)
       case VALUE_CL_IDLE:

@@ -55,6 +55,7 @@ const char label_WUE[] PROGMEM = "WUE";
 const char label_TPS2[] PROGMEM = "TPS";
 const char label_LCH[] PROGMEM = "LCH";
 const char label_FSH[] PROGMEM = "FSH";
+const char label_TGT[] PROGMEM = "TGT";
 
 // Configuración de cada valor disponible
 const ValueConfig VALUE_CONFIGS[] PROGMEM PROGMEM = {
@@ -79,6 +80,7 @@ const ValueConfig VALUE_CONFIGS[] PROGMEM PROGMEM = {
   {VALUE_ENGINE_TPS_AE,  SOURCE_MS2,   label_TPS2,UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
   {VALUE_ENGINE_LAUNCH,  SOURCE_MS2,   label_LCH, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
   {VALUE_ENGINE_FLATSHIFT,SOURCE_MS2,  label_FSH, UNIT_PERCENT, 0,   0,     1,      0.0,    1.0,    0},
+  {VALUE_MAP_TARGET,     SOURCE_MS2,   label_TGT, UNIT_KPA,     0,   0,     1500,   25.0,   350.0,  0},
 };
 
 const uint8_t VALUE_CONFIG_COUNT = sizeof(VALUE_CONFIGS) / sizeof(VALUE_CONFIGS[0]);
@@ -204,10 +206,10 @@ const uint8_t PAGE_COUNT = sizeof(PAGES) / sizeof(PAGES[0]);
 // ========== DISPLAY CONFIG ==========
 
 // Sistema de alertas
-#define ENABLE_ALERTS false  // true = alertas activas, false = desactivadas
+#define ENABLE_ALERTS true  // true = alertas activas, false = desactivadas
 
 // Sistema de notificaciones de flags
-#define ENABLE_FLAG_NOTIFICATIONS true  // true = mostrar flags cuando cambien, false = desactivado
+#define ENABLE_FLAG_NOTIFICATIONS false  // true = mostrar flags cuando cambien, false = desactivado
 
 // Modo test por defecto
 bool TEST_MODE_DEFAULT = true;
