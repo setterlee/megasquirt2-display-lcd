@@ -24,12 +24,13 @@
 
 // ========== TIMING CONFIG ==========
 
-const unsigned long UPDATE_INTERVAL   = 250;   // ms entre actualizaciones
-const unsigned long TEST_INTERVAL     = 120;   // ms entre pasos de test
-const unsigned long PEAK_VIEW_TIME    = 3000;  // ms mostrando MIN/MAX
-const unsigned long LONG_PRESS_TIME   = 1500;  // ms para detectar long press
-const unsigned long UNIT_MSG_TIME     = 3000;  // ms mostrando cambio de unidad
-const unsigned long MS2_TIMEOUT       = 1000;  // ms timeout para MS2
+const unsigned long UPDATE_INTERVAL        = 250;   // ms entre actualizaciones
+const unsigned long TEST_INTERVAL          = 120;   // ms entre pasos de test
+const unsigned long PEAK_VIEW_TIME         = 3000;  // ms mostrando MIN/MAX
+const unsigned long LONG_PRESS_TIME        = 1500;  // ms para detectar long press
+const unsigned long UNIT_MSG_TIME          = 3000;  // ms mostrando cambio de unidad
+const unsigned long MS2_TIMEOUT            = 1000;  // ms timeout para MS2
+const unsigned long FLAG_NOTIFICATION_TIME = 3000;  // ms mostrando cambio de flag
 
 // ========== VALUE DEFINITIONS ==========
 
@@ -205,12 +206,15 @@ const uint8_t PAGE_COUNT = sizeof(PAGES) / sizeof(PAGES[0]);
 // Sistema de alertas
 #define ENABLE_ALERTS false  // true = alertas activas, false = desactivadas
 
+// Sistema de notificaciones de flags
+#define ENABLE_FLAG_NOTIFICATIONS true  // true = mostrar flags cuando cambien, false = desactivado
+
 // Modo test por defecto
 bool TEST_MODE_DEFAULT = true;
 
 // Mensajes de inicio
 const char* BOOT_MSG_LINE1 = "Hi Setterlee!";
 const char* BOOT_MSG_LINE2 = "Welcome back :)";
-const unsigned long BOOT_DELAY = 3000;  // 3 segundos total (1.5s por mensaje)
+const unsigned long BOOT_DELAY = 6000;  // 6 segundos total (2s por mensaje × 3 mensajes)
 
 #endif

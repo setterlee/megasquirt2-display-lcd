@@ -26,10 +26,12 @@ DisplayHelper display(&lcd, &dataManager);
 uint8_t currentPage = 0;
 bool showPeaks = false;
 bool showUnitChange = false;
+bool showFlagNotification = false;
 
 unsigned long lastUpdate = 0;
 unsigned long peakViewStart = 0;
 unsigned long unitChangeStart = 0;
+unsigned long flagNotificationStart = 0;
 
 // ========== SETUP ==========
 
@@ -61,6 +63,15 @@ void loop() {
     // Actualizar datos
     dataManager.update();
     
+#if ENABLE_FLAG_NOTIFICATIONS
+    // Verificar si hay nueva notificación de flag
+    if (dataManager.hasFlagNotification() && !showFlagNotification) {
+      showFlagNotification = true;
+      flagNotificationStart = millis();
+      display.clear();
+    }
+#endif
+    
 #if ENABLE_ALERTS
     // Verificar alertas
     alertManager.update();
@@ -87,9 +98,26 @@ void loop() {
       showUnitChange = false;
       display.clear();
     }
+    
+#if ENABLE_FLAG_NOTIFICATIONS
+    // Manejar timeout de notificación de flag
+    if (showFlagNotification && millis() - flagNotificationStart > FLAG_NOTIFICATION_TIME) {
+      showFlagNotification = false;
+      dataManager.clearFlagNotification();
+      display.clear();
+    }
+#endif
 
     // Renderizar pantalla
     if (!showUnitChange) {
+#if ENABLE_FLAG_NOTIFICATIONS
+      // Prioridad 1: Notificación de flag
+      if (showFlagNotification) {
+        FlagNotification notif = dataManager.getFlagNotification();
+        display.showFlagNotification(notif.flagType, notif.newState);
+      }
+      else
+#endif
 #if ENABLE_ALERTS
       if (alertManager.isAlertActive()) {
         // Mostrar alerta en lugar de la página

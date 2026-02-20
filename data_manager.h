@@ -20,6 +20,10 @@ private:
   float testStep;
   bool testUp;
   unsigned long lastTestUpdate;
+  
+  // Flag tracking para notificaciones
+  float previousFlagValues[10];  // Track previous values for engine flags
+  FlagNotification currentNotification;
 
   // Inicializar datos
   void initData() {
@@ -33,6 +37,12 @@ private:
     testStep = 0.0;
     testUp = true;
     lastTestUpdate = 0;
+    
+    // Inicializar tracking de flags
+    for (uint8_t i = 0; i < 10; i++) {
+      previousFlagValues[i] = 0.0;
+    }
+    currentNotification.active = false;
   }
 
   // Encontrar índice de un valor
@@ -52,7 +62,7 @@ private:
     if (millis() - lastTestUpdate < TEST_INTERVAL) return;
     lastTestUpdate = millis();
 
-    testStep += testUp ? 0.05 : -0.05;
+    testStep += testUp ? 0.005 : -0.005;  // Incremento más lento para ciclo de ~24 segundos
     if (testStep >= 1.0) testUp = false;
     if (testStep <= 0.0) testUp = true;
 
@@ -107,14 +117,29 @@ private:
     setValue(VALUE_FUEL_PRESSURE, 40.0 + testStep * 10.0);
     setValue(VALUE_PULSE_WIDTH, 3.0 + testStep * 6.0);
     
-    // Engine status flags individuales - ciclar para testing
-    setValue(VALUE_ENGINE_READY, 1.0);
-    setValue(VALUE_ENGINE_CRANK, testStep < 0.1 ? 1.0 : 0.0);
-    setValue(VALUE_ENGINE_ASE, testStep < 0.3 ? 1.0 : 0.0);
-    setValue(VALUE_ENGINE_WARMUP, testStep < 0.5 ? 1.0 : 0.0);
-    setValue(VALUE_ENGINE_TPS_AE, testStep > 0.5 ? 1.0 : 0.0);
-    setValue(VALUE_ENGINE_LAUNCH, testStep > 0.8 ? 1.0 : 0.0);
-    setValue(VALUE_ENGINE_FLATSHIFT, 0.0);
+    // Engine status flags - simulación realista de secuencia de arranque y operación
+    // READY: se activa después del arranque y queda ON
+    setValue(VALUE_ENGINE_READY, testStep >= 0.05 ? 1.0 : 0.0);
+    
+    // CRANK: solo durante arranque inicial (primeros frames)
+    setValue(VALUE_ENGINE_CRANK, (testStep >= 0.0 && testStep < 0.05) ? 1.0 : 0.0);
+    
+    // ASE (After Start Enrichment): activo brevemente después del arranque
+    setValue(VALUE_ENGINE_ASE, (testStep >= 0.06 && testStep < 0.16) ? 1.0 : 0.0);
+    
+    // WARMUP: activo mientras el motor se calienta (más largo)
+    setValue(VALUE_ENGINE_WARMUP, (testStep >= 0.17 && testStep < 0.48) ? 1.0 : 0.0);
+    
+    // TPS_AE (Acceleration Enrichment): solo durante aceleraciones fuertes
+    // Simula dos pisadas de acelerador en momentos diferentes
+    setValue(VALUE_ENGINE_TPS_AE, 
+      ((testStep >= 0.21 && testStep < 0.26) || (testStep >= 0.72 && testStep < 0.77)) ? 1.0 : 0.0);
+    
+    // LAUNCH: solo en condición específica (RPM alta + condiciones)
+    setValue(VALUE_ENGINE_LAUNCH, (testStep >= 0.83 && testStep < 0.88) ? 1.0 : 0.0);
+    
+    // FLATSHIFT: muy raro, solo un momento específico
+    setValue(VALUE_ENGINE_FLATSHIFT, (testStep >= 0.93 && testStep < 0.96) ? 1.0 : 0.0);
   }
 
   // Actualizar valores reales desde sensores
@@ -147,10 +172,44 @@ private:
     }
   }
 
+  // Verificar si un tipo de valor es un flag
+  bool isFlag(ValueType type) {
+    return (type >= VALUE_ENGINE_READY && type <= VALUE_ENGINE_FLATSHIFT);
+  }
+  
+  // Obtener índice de flag (0-9) para el array previousFlagValues
+  int getFlagIndex(ValueType type) {
+    if (!isFlag(type)) return -1;
+    return type - VALUE_ENGINE_READY;
+  }
+  
   // Establecer valor y actualizar min/max
   void setValue(ValueType type, float value) {
     int idx = getIndex(type);
     if (idx < 0) return;
+
+#if ENABLE_FLAG_NOTIFICATIONS
+    // Detectar cambios en flags
+    if (isFlag(type)) {
+      int flagIdx = getFlagIndex(type);
+      if (flagIdx >= 0) {
+        float prevValue = previousFlagValues[flagIdx];
+        bool prevState = (prevValue > 0.5);
+        bool newState = (value > 0.5);
+        
+        // Si el flag cambió de estado, crear notificación
+        if (data[idx].valid && prevState != newState) {
+          currentNotification.flagType = type;
+          currentNotification.newState = newState;
+          currentNotification.timestamp = millis();
+          currentNotification.active = true;
+        }
+        
+        // Actualizar valor anterior
+        previousFlagValues[flagIdx] = value;
+      }
+    }
+#endif
 
     data[idx].current = value;
     data[idx].min = min(data[idx].min, value);
@@ -247,6 +306,20 @@ public:
     tempCfg = getConfigCopy(type);
     if (tempCfg.type == VALUE_NONE) return nullptr;
     return &tempCfg;
+  }
+  
+  // Obtener notificación activa de flag
+  bool hasFlagNotification() {
+    return currentNotification.active;
+  }
+  
+  FlagNotification getFlagNotification() {
+    return currentNotification;
+  }
+  
+  // Limpiar notificación de flag
+  void clearFlagNotification() {
+    currentNotification.active = false;
   }
 };
 

@@ -120,7 +120,7 @@ public:
     lcd->print(BOOT_MSG_LINE1);
     lcd->setCursor(0, 1);
     lcd->print(BOOT_MSG_LINE2);
-    delay(BOOT_DELAY / 2);
+    delay(BOOT_DELAY / 3);
     
     // Mostrar estado de alertas
     lcd->clear();
@@ -132,7 +132,19 @@ public:
 #else
     lcd->print(F("DISABLED"));
 #endif
-    delay(BOOT_DELAY / 2);
+    delay(BOOT_DELAY / 3);
+    
+    // Mostrar estado de notificaciones de flags
+    lcd->clear();
+    lcd->setCursor(0, 0);
+    lcd->print(F("FLAG NOTIFY:"));
+    lcd->setCursor(0, 1);
+#if ENABLE_FLAG_NOTIFICATIONS
+    lcd->print(F("ENABLED"));
+#else
+    lcd->print(F("DISABLED"));
+#endif
+    delay(BOOT_DELAY / 3);
     lcd->clear();
   }
 
@@ -245,6 +257,31 @@ public:
       char buf[17];
       strcpy_P(buf, line2);
       lcd->print(buf);
+    }
+  }
+  
+  // Mostrar notificación de cambio de flag
+  void showFlagNotification(ValueType flagType, bool newState) {
+    lcd->clear();
+    
+    const ValueConfig* config = dataManager->getConfig(flagType);
+    if (!config) return;
+    
+    // Buffer para leer label desde PROGMEM
+    char labelBuf[5];
+    strcpy_P(labelBuf, config->label);
+    
+    // Línea 1: nombre del flag con ":"
+    lcd->setCursor(0, 0);
+    lcd->print(labelBuf);
+    lcd->print(F(":"));
+    
+    // Línea 2: transición de estado
+    lcd->setCursor(0, 1);
+    if (newState) {
+      lcd->print(F("OFF -> ON"));
+    } else {
+      lcd->print(F("ON -> OFF"));
     }
   }
 };

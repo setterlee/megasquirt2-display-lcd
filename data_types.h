@@ -119,4 +119,12 @@ struct ValueData {
   bool valid;          // Dato válido?
 };
 
+// Notificación de cambio de flag
+struct FlagNotification {
+  ValueType flagType;  // Qué flag cambió
+  bool newState;       // Nuevo estado (true = ON, false = OFF)
+  unsigned long timestamp; // Cuándo cambió
+  bool active;         // Hay una notificación activa?
+};
+
 #endif
