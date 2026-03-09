@@ -113,38 +113,115 @@ public:
     lcd->backlight();
   }
 
-  // Mostrar mensaje de boot
+  // Mostrar mensaje de boot estilo Corvette C6
   void showBoot() {
     lcd->clear();
-    lcd->setCursor(0, 0);
-    lcd->print(BOOT_MSG_LINE1);
-    lcd->setCursor(0, 1);
-    lcd->print(BOOT_MSG_LINE2);
-    delay(BOOT_DELAY / 3);
     
-    // Mostrar estado de alertas
+    // ========== "LINEA 1" - EFECTO LÍNEA Y CONSTRUCCIÓN ==========
+    const char* lancer = "MITSUBISHI";
+    int lancerLen = strlen(lancer);
+    int startPos = (16 - lancerLen) / 2;  // Posición centrada
+    
+    // Dibujar línea inicial
+    lcd->setCursor(startPos, 0);
+    for (int i = 0; i < lancerLen; i++) {
+      lcd->print("_");
+    }
+    delay(500);
+    
+    // Construir letra por letra reemplazando el guión
+    for (int i = 0; i < lancerLen; i++) {
+      lcd->setCursor(startPos + i, 0);
+      lcd->print(lancer[i]);
+      delay(150);
+    }
+    delay(1200);
+    
+    // ========== "LINEA 2" - EFECTO LÍNEA Y CONSTRUCCIÓN ==========
+    lcd->clear();
+    
+    const char* mitsubishi = "LANCER";
+    int mitsuLen = strlen(mitsubishi);
+    int mitsuStartPos = (16 - mitsuLen) / 2;
+    
+    // Dibujar línea inicial
+    lcd->setCursor(mitsuStartPos, 0);
+    for (int i = 0; i < mitsuLen; i++) {
+      lcd->print("_");
+    }
+    delay(500);
+    
+    // Construir letra por letra reemplazando el guión
+    for (int i = 0; i < mitsuLen; i++) {
+      lcd->setCursor(mitsuStartPos + i, 0);
+      lcd->print(mitsubishi[i]);
+      delay(150);
+    }
+    delay(1200);
+    
+    // ========== MENSAJE - CONSTRUIR LÍNEA POR LÍNEA ==========
+    lcd->clear();
+    
+    const char* msg1 = "Hola Setterlee!";
+    const char* msg2 = "Bienvenido...";
+    
+    int msg1Len = strlen(msg1);
+    int msg1StartPos = (16 - msg1Len) / 2;
+    
+    // Línea 1 - dibujar línea base
+    lcd->setCursor(msg1StartPos, 0);
+    for (int i = 0; i < msg1Len; i++) {
+      lcd->print("_");
+    }
+    delay(400);
+    
+    // Construir letra por letra
+    for (int i = 0; i < msg1Len; i++) {
+      lcd->setCursor(msg1StartPos + i, 0);
+      lcd->print(msg1[i]);
+      delay(80);
+    }
+    
+    delay(400);
+    
+    int msg2Len = strlen(msg2);
+    int msg2StartPos = (16 - msg2Len) / 2;
+    
+    // Línea 2 - dibujar línea base
+    lcd->setCursor(msg2StartPos, 1);
+    for (int i = 0; i < msg2Len; i++) {
+      lcd->print("_");
+    }
+    delay(400);
+    
+    // Construir letra por letra
+    for (int i = 0; i < msg2Len; i++) {
+      lcd->setCursor(msg2StartPos + i, 1);
+      lcd->print(msg2[i]);
+      delay(80);
+    }
+    
+    delay(2000);
+    
+    // ========== INFO DEL SISTEMA - PANTALLA ÚNICA ==========
     lcd->clear();
     lcd->setCursor(0, 0);
-    lcd->print(F("ALERTS:"));
-    lcd->setCursor(0, 1);
+    lcd->print(F("Alerts: "));
 #if ENABLE_ALERTS
-    lcd->print(F("ENABLED"));
+    lcd->print(F("ON"));
 #else
-    lcd->print(F("DISABLED"));
+    lcd->print(F("OFF"));
 #endif
-    delay(BOOT_DELAY / 3);
     
-    // Mostrar estado de notificaciones de flags
-    lcd->clear();
-    lcd->setCursor(0, 0);
-    lcd->print(F("FLAG NOTIFY:"));
     lcd->setCursor(0, 1);
+    lcd->print(F("Flags: "));
 #if ENABLE_FLAG_NOTIFICATIONS
-    lcd->print(F("ENABLED"));
+    lcd->print(F("ON"));
 #else
-    lcd->print(F("DISABLED"));
+    lcd->print(F("OFF"));
 #endif
-    delay(BOOT_DELAY / 3);
+    
+    delay(2000);
     lcd->clear();
   }
 
