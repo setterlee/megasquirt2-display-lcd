@@ -100,6 +100,29 @@ private:
     }
   }
 
+  // Versión compacta para mostrar 2 valores por línea (sin unidades)
+  void printPeaksCompact(const DisplayItem& item) {
+    if (item.value == VALUE_NONE) return;
+
+    const ValueConfig* config = dataManager->getConfig(item.value);
+    if (!config) return;
+
+    float minVal = dataManager->getMin(item.value);
+    float maxVal = dataManager->getMax(item.value);
+    
+    minVal = convertValue(minVal, config->unit);
+    maxVal = convertValue(maxVal, config->unit);
+
+    // Formato compacto: solo números, sin unidades
+    // Ajustar decimales para ahorrar espacio
+    uint8_t decimals = config->decimals;
+    if (maxVal >= 100) decimals = 0;  // Si es >100, sin decimales
+    
+    lcd->print(minVal, decimals);
+    lcd->print("/");
+    lcd->print(maxVal, decimals);
+  }
+
 public:
   // Constructor
   DisplayHelper(LiquidCrystal_I2C* lcdPtr, DataManager* dmPtr) {
@@ -258,24 +281,44 @@ public:
     
     char labelBuf[5];
     
-    // Línea 1
+    // Línea 1: Mostrar ambos items (compacto)
     lcd->setCursor(0, 0);
+    // Item 1 de línea 1
     if (page.line1.item1.value != VALUE_NONE) {
-      const ValueConfig* cfg = dataManager->getConfig(page.line1.item1.value);
-      strcpy_P(labelBuf, cfg->label);
+      const ValueConfig* cfg1 = dataManager->getConfig(page.line1.item1.value);
+      strcpy_P(labelBuf, cfg1->label);
       lcd->print(labelBuf);
       lcd->print(F(" "));
-      printPeaks(page.line1.item1);
+      printPeaksCompact(page.line1.item1);
+    }
+    // Item 2 de línea 1
+    if (page.line1.item2.value != VALUE_NONE) {
+      const ValueConfig* cfg2 = dataManager->getConfig(page.line1.item2.value);
+      lcd->print(F(" "));
+      strcpy_P(labelBuf, cfg2->label);
+      lcd->print(labelBuf);
+      lcd->print(F(" "));
+      printPeaksCompact(page.line1.item2);
     }
 
-    // Línea 2
+    // Línea 2: Mostrar ambos items (compacto)
     lcd->setCursor(0, 1);
+    // Item 1 de línea 2
     if (page.line2.item1.value != VALUE_NONE) {
-      const ValueConfig* cfg = dataManager->getConfig(page.line2.item1.value);
-      strcpy_P(labelBuf, cfg->label);
+      const ValueConfig* cfg1 = dataManager->getConfig(page.line2.item1.value);
+      strcpy_P(labelBuf, cfg1->label);
       lcd->print(labelBuf);
       lcd->print(F(" "));
-      printPeaks(page.line2.item1);
+      printPeaksCompact(page.line2.item1);
+    }
+    // Item 2 de línea 2
+    if (page.line2.item2.value != VALUE_NONE) {
+      const ValueConfig* cfg2 = dataManager->getConfig(page.line2.item2.value);
+      lcd->print(F(" "));
+      strcpy_P(labelBuf, cfg2->label);
+      lcd->print(labelBuf);
+      lcd->print(F(" "));
+      printPeaksCompact(page.line2.item2);
     }
   }
 

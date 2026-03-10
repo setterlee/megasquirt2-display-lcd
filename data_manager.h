@@ -220,8 +220,17 @@ private:
 #endif
 
     data[idx].current = value;
-    data[idx].min = min(data[idx].min, value);
-    data[idx].max = max(data[idx].max, value);
+    
+    // Si es el primer valor válido, inicializar min/max con este valor
+    if (!data[idx].valid) {
+      data[idx].min = value;
+      data[idx].max = value;
+    } else {
+      // Actualizar min/max normalmente
+      data[idx].min = min(data[idx].min, value);
+      data[idx].max = max(data[idx].max, value);
+    }
+    
     data[idx].lastUpdate = millis();
     data[idx].valid = true;
   }
@@ -255,6 +264,8 @@ public:
   float getMin(ValueType type) {
     int idx = getIndex(type);
     if (idx < 0) return 0.0;
+    // Si no hay datos válidos, devolver el valor actual
+    if (!data[idx].valid) return data[idx].current;
     return data[idx].min;
   }
 
@@ -262,6 +273,8 @@ public:
   float getMax(ValueType type) {
     int idx = getIndex(type);
     if (idx < 0) return 0.0;
+    // Si no hay datos válidos, devolver el valor actual
+    if (!data[idx].valid) return data[idx].current;
     return data[idx].max;
   }
 
