@@ -215,9 +215,4 @@ const uint8_t PAGE_COUNT = sizeof(PAGES) / sizeof(PAGES[0]);
 // Modo test por defecto
 bool TEST_MODE_DEFAULT = false;
 
-// Mensajes de inicio
-const char* BOOT_MSG_LINE1 = "Hi Setterlee!";
-const char* BOOT_MSG_LINE2 = "Welcome back :)";
-const unsigned long BOOT_DELAY = 6000;  // 6 segundos total (2s por mensaje × 3 mensajes)
-
 #endif

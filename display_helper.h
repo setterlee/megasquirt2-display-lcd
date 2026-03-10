@@ -135,7 +135,7 @@ public:
       lcd->print(lancer[i]);
       delay(150);
     }
-    delay(1200);
+    delay(600);
     
     // ========== "LINEA 2" - EFECTO LÍNEA Y CONSTRUCCIÓN ==========
     lcd->clear();
@@ -157,7 +157,7 @@ public:
       lcd->print(mitsubishi[i]);
       delay(150);
     }
-    delay(1200);
+    delay(600);
     
     // ========== MENSAJE - CONSTRUIR LÍNEA POR LÍNEA ==========
     lcd->clear();
@@ -201,7 +201,7 @@ public:
       delay(80);
     }
     
-    delay(2000);
+    delay(1200);
     
     // ========== INFO DEL SISTEMA - PANTALLA ÚNICA ==========
     lcd->clear();
