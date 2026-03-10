@@ -26,7 +26,8 @@
 
 const unsigned long UPDATE_INTERVAL        = 250;   // ms entre actualizaciones
 const unsigned long TEST_INTERVAL          = 120;   // ms entre pasos de test
-const unsigned long PEAK_VIEW_TIME         = 3000;  // ms mostrando MIN/MAX
+const unsigned long PEAK_VIEW_TIME         = 10000; // ms mostrando MIN/MAX (marquee completo)
+const unsigned long MARQUEE_INTERVAL       = 2500;  // ms por cada valor en marquee
 const unsigned long LONG_PRESS_TIME        = 1500;  // ms para detectar long press
 const unsigned long UNIT_MSG_TIME          = 3000;  // ms mostrando cambio de unidad
 const unsigned long MS2_TIMEOUT            = 1000;  // ms timeout para MS2

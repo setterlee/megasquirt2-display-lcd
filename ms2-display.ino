@@ -28,6 +28,10 @@ bool showPeaks = false;
 bool showUnitChange = false;
 bool showFlagNotification = false;
 
+// Marquee state
+uint8_t marqueeIndex = 0;  // 0-3: cual valor está visible (line1.item1, line1.item2, line2.item1, line2.item2)
+unsigned long lastMarqueeRotation = 0;
+
 unsigned long lastUpdate = 0;
 unsigned long peakViewStart = 0;
 unsigned long unitChangeStart = 0;
@@ -90,6 +94,14 @@ void loop() {
     // Manejar timeout de peaks
     if (showPeaks && millis() - peakViewStart > PEAK_VIEW_TIME) {
       showPeaks = false;
+      marqueeIndex = 0;  // Reset marquee
+      display.clear();
+    }
+    
+    // Manejar rotación de marquee cuando está en modo peak
+    if (showPeaks && millis() - lastMarqueeRotation > MARQUEE_INTERVAL) {
+      lastMarqueeRotation = millis();
+      marqueeIndex = (marqueeIndex + 1) % 4;  // Rotar entre 0-3
       display.clear();
     }
 
@@ -126,7 +138,7 @@ void loop() {
       else
 #endif
       if (showPeaks) {
-        display.renderPeaks(currentPage);
+        display.renderPeaksMarquee(currentPage, marqueeIndex);
       } else {
         display.renderPage(currentPage);
       }
@@ -189,6 +201,8 @@ void handlePeakButton() {
   if (lastState == LOW && current == HIGH && !longHandled) {
     showPeaks = true;
     peakViewStart = millis();
+    marqueeIndex = 0;  // Empezar desde primer valor
+    lastMarqueeRotation = millis();
     display.clear();
   }
 

@@ -322,6 +322,62 @@ public:
     }
   }
 
+  // Renderizar peaks en formato marquee (un valor a la vez)
+  void renderPeaksMarquee(uint8_t pageIndex, uint8_t marqueeIndex) {
+    if (pageIndex >= PAGE_COUNT) return;
+
+    PageConfig page;
+    memcpy_P(&page, &PAGES[pageIndex], sizeof(PageConfig));
+    
+    // Determinar qu\u00e9 item mostrar seg\u00fan marqueeIndex
+    // 0: line1.item1, 1: line1.item2, 2: line2.item1, 3: line2.item2
+    DisplayItem item;
+    if (marqueeIndex == 0) {
+      item = page.line1.item1;
+    } else if (marqueeIndex == 1) {
+      item = page.line1.item2;
+    } else if (marqueeIndex == 2) {
+      item = page.line2.item1;
+    } else {
+      item = page.line2.item2;
+    }
+    
+    // Si el item no existe, mostrar mensaje
+    if (item.value == VALUE_NONE) {
+      lcd->setCursor(0, 0);
+      lcd->print(F("NO DATA"));
+      return;
+    }
+    
+    const ValueConfig* config = dataManager->getConfig(item.value);
+    if (!config) return;
+    
+    // L\u00ednea 1: Label + Unidad
+    char labelBuf[5];
+    strcpy_P(labelBuf, config->label);
+    
+    lcd->setCursor(0, 0);
+    lcd->print(labelBuf);
+    lcd->print(F(" ("));
+    lcd->print(getUnitLabel(config->unit));
+    lcd->print(F(")"));
+    lcd->print(F("        "));  // Limpiar resto
+    
+    // L\u00ednea 2: MIN:XX MAX:YY
+    float minVal = dataManager->getMin(item.value);
+    float maxVal = dataManager->getMax(item.value);
+    
+    minVal = convertValue(minVal, config->unit);
+    maxVal = convertValue(maxVal, config->unit);
+    
+    lcd->setCursor(0, 1);
+    lcd->print(F("MIN:"));
+    lcd->print(minVal, config->decimals);
+    lcd->print(F(" MAX:"));
+    lcd->print(maxVal, config->decimals);
+    lcd->print(F("     "));  // Limpiar resto
+  }
+
   // Mostrar mensaje temporal
   void showMessage(const __FlashStringHelper* line1, const __FlashStringHelper* line2, unsigned long duration = 0) {
     lcd->clear();
