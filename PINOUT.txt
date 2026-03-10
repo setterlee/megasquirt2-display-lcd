@@ -1,0 +1,252 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      ARDUINO UNO - PINOUT COMPLETO                           ║
+║                         MS2 Display Monitor                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                            DIGITAL PINS                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  PIN    │  FUNCIÓN              │  CONEXIÓN                │  NOTAS
+  ───────┼───────────────────────┼──────────────────────────┼───────────────────
+  D0 RX  │  MS2 Serial RX        │  MS2 TX (DB9 pin 2)      │  NO usar mientras programa
+  D1 TX  │  MS2 Serial TX        │  MS2 RX (DB9 pin 3)      │  NO usar mientras programa
+  D2     │  Botón PAGE           │  Button → GND            │  Pull-up interno
+  D3     │  Botón PEAK           │  Button → GND            │  Pull-up interno
+  D4-D7  │  [LIBRE]              │  Disponibles             │  
+  D8-D13 │  [LIBRE]              │  Disponibles             │  
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                            ANALOG PINS                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  PIN    │  FUNCIÓN              │  CONEXIÓN                │  NOTAS
+  ───────┼───────────────────────┼──────────────────────────┼───────────────────
+  A0     │  [LIBRE]              │  Disponible              │  
+  A1     │  [LIBRE]              │  Disponible              │  Era oil pressure
+  A2     │  Temp Aceite (NTC)    │  5V→10K→A2→NTC→GND       │  Con divisor 10K
+  A3     │  Voltaje Batería      │  12V→20K→A3→10K→GND      │  Opcional
+  A4 SDA │  LCD I2C Data         │  LCD SDA                 │  I2C fijo
+  A5 SCL │  LCD I2C Clock        │  LCD SCL                 │  I2C fijo
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                            POWER PINS                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  PIN    │  FUNCIÓN              │  CONEXIÓN                │  NOTAS
+  ───────┼───────────────────────┼──────────────────────────┼───────────────────
+  5V     │  Power Output         │  LCD VCC, Sensores       │  Max 500mA total
+  3.3V   │  [No usar]            │  N/A                     │  Demasiado bajo
+  GND    │  Ground (×3 pines)    │  Común con todo          │  Todos conectados
+  VIN    │  Power Input          │  Step-down 5V output     │  Acepta 5-12V
+  IOREF  │  [No usar]            │  N/A                     │  Reference only
+  RESET  │  [No conectar]        │  N/A                     │  Solo para debug
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          MEGASQUIRT 2 DB9 PINOUT                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Mirando al conector DB9 HEMBRA (lado MS2):
+
+       ┌─────────────────┐
+       │  1   2   3   4  │       Pin 1: N/C
+       │   6   7   8   9 │       Pin 2: TX (output MS2) → Arduino RX
+       │      5          │       Pin 3: RX (input MS2)  → Arduino TX
+       └─────────────────┘       Pin 4: N/C
+                                 Pin 5: GND → Arduino GND
+                                 Pin 6-9: N/C para serial
+
+  CONEXIONES SERIAL:
+  ─────────────────────────────────────────────────────────────
+  MS2 Pin 2 (TX)  →  Arduino Pin 0 (RX)    [Datos MS2 → Arduino]
+  MS2 Pin 3 (RX)  →  Arduino Pin 1 (TX)    [Datos Arduino → MS2]
+  MS2 Pin 5 (GND) →  Arduino GND            [Referencia común]
+
+  ⚠️  Si no comunica, INVERTIR TX/RX
+  ⚠️  Verificar GND común es CRÍTICO
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          LCD I2C 16x2 PINOUT                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Módulo LCD típico con backpack I2C:
+
+  PIN    │  FUNCIÓN     │  CONEXIÓN         │  NOTAS
+  ───────┼──────────────┼───────────────────┼────────────────────────
+  VCC    │  Power +5V   │  Arduino 5V       │  
+  GND    │  Ground      │  Arduino GND      │  
+  SDA    │  I2C Data    │  Arduino A4       │  Pull-up interno I2C
+  SCL    │  I2C Clock   │  Arduino A5       │  Pull-up interno I2C
+
+  Dirección I2C: 0x27 (típico) o 0x3F
+  Potenciómetro en backpack: ajusta contraste
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    SENSOR NTC TEMPERATURA ACEITE                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  CIRCUITO DIVISOR DE VOLTAJE:
+
+           Arduino 5V
+               │
+               │
+          ┌────┴────┐
+          │  10KΩ   │  ← Resistencia FIJA (1/4W, ±5% tolerancia OK)
+          │  1/4W   │
+          └────┬────┘
+               │
+               ├──────→  Arduino Pin A2
+               │
+          ┌────┴────┐
+          │   NTC   │  ← Sensor NTC (resistencia variable con temp)
+          │ Sensor  │     62.3K @ 20°C → 0.9K @ 150°C
+          └────┬────┘
+               │
+             GND
+
+  VALORES ESPERADOS EN A2:
+  ────────────────────────────────────────────────────────────
+  Temp (°C)  │  Resistencia NTC  │  Voltaje A2  │  ADC Value
+  ───────────┼───────────────────┼──────────────┼────────────
+     20      │     62.32 KΩ      │    4.31 V    │    881
+     40      │     26.65 KΩ      │    3.64 V    │    743
+     60      │     12.32 KΩ      │    2.76 V    │    564
+     80      │      6.14 KΩ      │    1.90 V    │    389
+    100      │      3.32 KΩ      │    1.25 V    │    255
+    120      │      1.97 KΩ      │    0.82 V    │    168
+    140      │      1.17 KΩ      │    0.52 V    │    107
+    150      │      0.90 KΩ      │    0.41 V    │     85
+
+  A mayor temperatura → Menor resistencia → Menor voltaje
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    STEP-DOWN 12V → 5V CONFIGURACIÓN                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Módulo típico: LM2596 / MP1584 / similar
+
+  INPUT:
+  ────────────────────────────────────────────────────────────
+  IN+  ← Auto 12V (después de fusible 2A)
+  IN-  ← Auto GND (chasis)
+
+  OUTPUT:
+  ────────────────────────────────────────────────────────────
+  OUT+ → Arduino VIN (o 5V pin)
+  OUT- → Arduino GND
+
+  AJUSTE:
+  ────────────────────────────────────────────────────────────
+  1. Conectar INPUT a fuente 12V (NO conectar output aún)
+  2. Medir voltaje OUTPUT con multímetro
+  3. Girar potenciómetro hasta leer EXACTAMENTE 5.0V
+  4. Rango aceptable: 4.8V - 5.2V
+  5. Si es > 5.3V: puede dañar Arduino
+  6. Si es < 4.7V: puede no funcionar bien
+
+  CAPACIDAD REQUERIDA:
+  ────────────────────────────────────────────────────────────
+  Arduino UNO:        ~50 mA
+  LCD 16x2 (backlit): ~80 mA
+  Sensores:           ~10 mA
+  ───────────────────────────
+  TOTAL:              ~150 mA  → step-down de 1A es suficiente
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          BOTONES - CIRCUITO                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Arduino usa pull-up interno → No necesita resistencia externa
+
+  BOTÓN PAGE (D2):
+  ────────────────────────────────────────────────────────────
+
+      D2 ──────┬──────○  ○──────┬────── GND
+               │      Button     │
+           [Pull-up]         [Presionado]
+           interno 20K
+               │
+              5V
+
+  Estado normal: HIGH (5V por pull-up)
+  Presionado:    LOW  (0V, conecta a GND)
+
+  BOTÓN PEAK (D3):
+  ────────────────────────────────────────────────────────────
+  
+      D3 ──────┬──────○  ○──────┬────── GND
+               │      Button     │
+           [Pull-up]         [Presionado]
+           interno 20K
+               │
+              5V
+
+  Estado normal: HIGH (5V por pull-up)
+  Presionado:    LOW  (0V, conecta a GND)
+
+  ⚠️  NO usar resistencias externas con pull-up interno activado
+  ⚠️  Botones pueden ser normalmente abiertos (NO/NC)
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      VOLTAJE BATERÍA MONITOR (Opcional)                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  DIVISOR RESISTIVO para monitorear 12V del auto:
+
+           Auto 12V
+               │
+          ┌────┴────┐
+          │  20KΩ   │  ← Resistencia 1/4W
+          └────┬────┘
+               │
+               ├──────→  Arduino Pin A3
+               │
+          ┌────┴────┐
+          │  10KΩ   │  ← Resistencia 1/4W
+          └────┬────┘
+               │
+             GND
+
+  CÁLCULO:
+  ────────────────────────────────────────────────────────────
+  V_A3 = V_batería × (10K / (20K + 10K))
+  V_A3 = V_batería × 0.333
+
+  Ejemplos:
+  12.0V → 4.0V en A3 → ADC 818
+  14.4V → 4.8V en A3 → ADC 983
+  20.0V → 5.0V en A3 → ADC 1023 (máximo seguro)
+
+  ⚠️  Este divisor protege el Arduino de voltajes > 15V
+  ⚠️  Si batería es 24V, usar divisor diferente (40K + 10K)
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              NOTAS FINALES                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  PINES LIBRES DISPONIBLES:
+  ─────────────────────────────────────────────────────────────────────────
+  A0, A1    → 2x entradas analógicas disponibles
+  D4-D13    → 10x pines digitales disponibles
+  
+  Podés agregar:
+  - Más sensores analógicos directos (A0, A1)
+  - Más botones (D4-D13)
+  - Salidas digitales (relays, LEDs, etc)
+
+  LÍMITES DEL ARDUINO UNO:
+  ─────────────────────────────────────────────────────────────────────────
+  - Max 5V en pines analógicos (0-5V = 0-1023 ADC)
+  - Max 40mA por pin digital (usar relay para cargas altas)
+  - Max 200mA total en todos los pines
+  - Pin 5V puede dar hasta 500mA (limitado por regulador)
+
+  CONSUMO DE CORRIENTE TOTAL:
+  ─────────────────────────────────────────────────────────────────────────
+  Sistema completo: ~150-200 mA @ 5V
+  En 12V (antes step-down): ~70-100 mA
+  Con fusible 2A: amplio margen de seguridad
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    🔧 Pinout Reference v1.0 🔧                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝

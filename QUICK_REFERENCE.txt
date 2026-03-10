@@ -1,0 +1,182 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     MS2 DISPLAY - QUICK REFERENCE CARD                       ║
+║                          Instalación Rápida                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 1. ALIMENTACIÓN                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  AUTO 12V ──→ [FUSIBLE 2A] ──→ STEP-DOWN ──→ Arduino VIN/5V                │
+│  AUTO GND ──────────────────→ STEP-DOWN ──→ Arduino GND                     │
+│                                                                              │
+│  ⚠️  Ajustar step-down a 5.0V ANTES de conectar Arduino                     │
+│  ⚠️  Verificar con multímetro: 4.8-5.2V OK                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 2. LCD I2C (16x2)                                                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  LCD VCC ──→ Arduino 5V                                                      │
+│  LCD GND ──→ Arduino GND                                                     │
+│  LCD SDA ──→ Arduino A4                                                      │
+│  LCD SCL ──→ Arduino A5                                                      │
+│                                                                              │
+│  Dirección I2C: 0x27 (o 0x3F si no funciona)                                │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 3. SENSOR NTC TEMPERATURA ACEITE                                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│         5V ──→ [Resistencia 10KΩ] ──┬──→ [Sensor NTC] ──→ GND              │
+│                                      │                                       │
+│                                      └─────→ Arduino A2                      │
+│                                                                              │
+│  ⚠️  La resistencia 10K es OBLIGATORIA                                       │
+│  ⚠️  Aislar todas las conexiones (heat shrink)                              │
+│  ⚠️  Sensor NO debe tocar chasis (cortocircuito)                            │
+│                                                                              │
+│  Valores esperados: 20°C ≈ 4.3V  |  100°C ≈ 1.2V  |  140°C ≈ 0.5V          │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 4. BOTONES                                                                   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Botón PAGE:  D2 ──→ [Botón] ──→ GND    (sin resistencia, pull-up interno) │
+│  Botón PEAK:  D3 ──→ [Botón] ──→ GND    (sin resistencia, pull-up interno) │
+│                                                                              │
+│  Short press PAGE = cambiar página   |  Long press PAGE = cambiar unidad    │
+│  Short press PEAK = ver min/max      |  Long press PEAK = reset peaks       │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 5. MEGASQUIRT 2 (Serial)                                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  MS2 TX (pin 2 DB9) ──→ Arduino RX (pin 0)                                  │
+│  MS2 RX (pin 3 DB9) ──→ Arduino TX (pin 1)                                  │
+│  MS2 GND (pin 5 DB9) ─→ Arduino GND                                         │
+│                                                                              │
+│  Baudrate: 9600 bps                                                          │
+│  Protocol: MS2 Extra 3.4.4                                                   │
+│                                                                              │
+│  ⚠️  Si no comunica, intentar INVERTIR TX/RX                                │
+│  ⚠️  Verificar GND común MS2-Arduino                                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 6. VOLTAJE BATERÍA (Opcional - Monitor)                                     │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Opción A: 12V ──→ [R 20K] ──┬──→ [R 10K] ──→ GND                          │
+│                               │                                              │
+│                               └──────→ Arduino A3                            │
+│                                                                              │
+│  Opción B: Tomar del sense input del step-down (si tiene)                   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           CHECKLIST DE INSTALACIÓN                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+[ ] 1. Firmware subido al Arduino (con TEST_MODE = false)
+[ ] 2. Step-down ajustado y verificado (5.0V con multímetro)
+[ ] 3. Sensor NTC con resistencia 10K instalado
+[ ] 4. LCD I2C conectado y verificado
+[ ] 5. Botones PAGE y PEAK conectados
+[ ] 6. Todos los cables aislados (heat shrink)
+[ ] 7. Fusible 2A instalado en línea de 12V
+[ ] 8. No hay cortocircuitos (verificar con multímetro)
+[ ] 9. Arduino montado en gabinete protegido
+[ ] 10. Cables ruteados lejos de alta tensión (bobinas)
+
+PRIMERA PRUEBA (fuera del auto):
+[ ] Conectar step-down a fuente 12V de banco
+[ ] Arduino enciende (LED power)
+[ ] LCD muestra: "Hi Setterlee!"
+[ ] Botones funcionan
+[ ] Temp aceite muestra valor ambiente
+
+PRUEBA EN AUTO (auto apagado):
+[ ] Conectar 12V del auto (CON FUSIBLE)
+[ ] Girar llave a ACC (no arrancar)
+[ ] Verificar que sistema enciende
+[ ] Conectar serial a MS2
+[ ] Girar llave a ON
+[ ] Verificar comunicación MS2 (valores cambian)
+[ ] Solo si todo OK: arrancar motor
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            VALORES NORMALES MOTOR                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+                        RALENTÍ              EN MARCHA / BOOST
+  ─────────────────────────────────────────────────────────────────────────
+  Temp Aceite:         80-95°C              95-110°C
+  Presión Aceite:      20-40 PSI            40-60 PSI (más con RPM)
+  Presión Combustible: 40-55 PSI            40-55 PSI
+  MAP:                 30-50 kPa (vacío)    50-300 kPa (boost)
+  RPM:                 800-1000             1000-7000+
+  Voltaje Batería:     13.5-14.5V           13.5-14.5V
+  Temp Coolant:        85-95°C              85-95°C
+  ─────────────────────────────────────────────────────────────────────────
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              TROUBLESHOOTING                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  PROBLEMA                    SOLUCIÓN
+  ────────────────────────────────────────────────────────────────────────
+  Arduino no enciende         → Verificar voltaje step-down (5.0V)
+                              → Verificar fusible
+                              → Verificar GND
+
+  LCD no muestra nada         → Ajustar contraste (potenciómetro I2C)
+                              → Probar dirección 0x3F en vez de 0x27
+                              → Verificar 5V al LCD
+
+  MS2 no comunica             → Invertir TX/RX
+                              → Verificar baudrate 9600
+                              → Verificar GND común
+
+  Temp aceite incorrecta      → Verificar resistencia 10K
+                              → Verificar sensor no toca chasis
+                              → A temperatura ambiente debe leer ~25-30°C
+
+  Presiones en 0              → Verificar custom.ini en MS2
+                              → Verificar sensores conectados a ADC6/ADC7
+                              → Verificar comunicación serial funciona
+
+  Arduino se resetea          → Step-down no da suficiente corriente (>1A)
+                              → Verificar no hay cortocircuitos
+                              → Verificar 12V estable
+  ────────────────────────────────────────────────────────────────────────
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           SOPORTE DE EMERGENCIA                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  Si algo sale mal durante instalación:
+  
+  1. DESCONECTAR 12V inmediatamente
+  2. Verificar que no hay humo/olor a quemado
+  3. Revisar checklist paso por paso
+  4. Usar multímetro para verificar voltajes
+  5. En modo test todo debe funcionar (TEST_MODE = true)
+
+  ⚠️  NUNCA forzar conexiones
+  ⚠️  NUNCA conectar con polaridad invertida
+  ⚠️  SIEMPRE usar fusible apropiado
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    🏁 ¡LISTO PARA RODAR! 🏁                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝

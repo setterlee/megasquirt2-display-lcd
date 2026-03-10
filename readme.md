@@ -1,27 +1,74 @@
-# Lancer Custom Monitor – Arduino UNO + LCD I2C
+# Lancer Custom Monitor – Arduino UNO + LCD I2C + MegaSquirt 2
 
-Monitor auxiliar retro para Mitsubishi Lancer 1993 basado en **Arduino UNO** y **LCD 16x2 I2C**, diseñado para uso automotriz real:
+Monitor auxiliar para Mitsubishi Lancer 1993 basado en **Arduino UNO** y **LCD 16x2 I2C**, diseñado para uso automotriz real:
 - 🎯 Discreto y minimalista
 - ⚡ Rápido de leer durante la conducción
 - 📊 6 páginas especializadas desde perspectiva de tuner
 - 🔧 Sin llenar el tablero de relojes
+- 🌡️ Sensor NTC temperatura aceite con lookup table (±2°C precisión)
 
 **Características principales:**
 - ✅ Arquitectura modular y configurable (8 archivos)
-- ✅ Comunicación con MegaSquirt 2 (9600 baud, 75 bytes)
+- ✅ Comunicación con MegaSquirt 2 Extra 3.4.4 (9600 baud)
 - ✅ Sensores directos analógicos + MS2 unificados
-- ✅ 19 sensores/valores configurados (incluye 7 engine status flags)
+- ✅ 19+ sensores/valores configurados (incluye 7 engine status flags)
 - ✅ Paginación por botón (6 páginas: Daily, Performance, Health, Fuel, Cold Start, Advanced)
 - ✅ Registro de MIN/MAX con reset
 - ✅ Cambio de unidades PSI ↔ BAR ↔ kPa (long press)
-- ✅ Sistema de alertas (7 simples + 3 compuestas) con LCD blink inteligente
-- ✅ Modo TEST con 4 escenarios (cold start, low oil, overheating, normal)
-- ✅ Optimización PROGMEM (~640 bytes de RAM ahorrados, uso 44%)
-- ✅ Test values completos para DWELL (2.5-5.5ms)
+- ✅ Sistema de alertas con LCD blink inteligente
+- ✅ Lookup table NTC para temperatura aceite (14 puntos calibrados)
+- ✅ Modo TEST con escenarios de boost control
+- ✅ Optimización PROGMEM (~640 bytes de RAM ahorrados)
+- ✅ **Listo para instalación en auto** 🚗
 
 ---
 
-## 📑 Índice
+## � DOCUMENTACIÓN DE INSTALACIÓN
+
+### Para instalar en tu auto, consulta estos documentos:
+
+1. **[📋 ASSEMBLY_GUIDE.md](ASSEMBLY_GUIDE.md)** - Guía completa de ensamblaje paso a paso
+   - Lista de materiales (BOM)
+   - Diagramas de conexión detallados
+   - Pasos de ensamblaje
+   - Conexión al auto (step-down 12V→5V)
+   - Checklist pre-encendido
+   - Troubleshooting
+
+2. **[🔌 QUICK_REFERENCE.txt](QUICK_REFERENCE.txt)** - Tarjeta de referencia rápida
+   - Conexiones resumidas
+   - Checklist de instalación
+   - Valores normales del motor
+   - Soluciones rápidas
+
+3. **[📍 PINOUT.txt](PINOUT.txt)** - Pinout completo
+   - Arduino UNO (pines digitales y analógicos)
+   - MegaSquirt 2 DB9
+   - LCD I2C
+   - Sensor NTC temperatura aceite
+   - Step-down configuración
+
+4. **[🚗 INSTALLATION_TIPS.md](INSTALLATION_TIPS.md)** - Tips de instalación vehicular
+   - Ubicación de componentes
+   - Ruteo de cables
+   - Protección contra agua/humedad
+   - Reducción de interferencias
+   - Mantenimiento
+
+5. **[🛒 BOM.md](BOM.md)** - Lista de materiales detallada
+   - Componentes con precios aprox
+   - Dónde comprar
+   - Alternativas
+   - Presupuesto total
+
+6. **[🌡️ SENSOR_NTC_WIRING.txt](SENSOR_NTC_WIRING.txt)** - Guía sensor NTC
+   - Circuito divisor de voltaje
+   - Tabla de valores esperados
+   - Configuración MS2 (presiones)
+
+---
+
+## 📑 Índice Técnico
 
 1. [Arquitectura Modular](#-arquitectura-modular)
 2. [Hardware](#-hardware)
@@ -91,13 +138,17 @@ ms2-display/
 - Pull-up interno activado por software
 
 ### Sensores directos (analógicos)
-- Presión de aceite → A1
-- Temperatura de aceite → A2
-- Voltaje batería → A3 (divisor resistivo)
-- Temperatura de aire → A6
+- **Temperatura de aceite (NTC)** → A2 (con resistencia 10KΩ divisor)
+- Voltaje batería → A3 (divisor resistivo 20K+10K)
+- ~~Presión de aceite~~ → **Ahora desde MS2 ADC7**
+- Pin A0, A1 libres para expansión
 
 ### MegaSquirt 2
 - Puerto Serial → D0 (RX) / D1 (TX)
+- Firmware: MS2 Extra 3.4.4
+- Baudrate: 9600 bps
+- **Presión de aceite** → MS2 ADC7
+- **Presión combustible** → MS2 ADC6
 - Baud rate: 9600
 - Protocolo: MS2 Extra realtime data
 - Datos disponibles: MAP, IAT, CLT, RPM, TPS, AFR, ignition timing, etc.
@@ -238,17 +289,20 @@ const PageConfig PAGES[] = {
 ### Sensores directos (analógicos)
 Conectados directamente a pines del Arduino:
 
-| Sensor | Pin | Rango | Unidad |
-|--------|-----|-------|--------|
-| Presión de aceite | A1 | 0-87 PSI | PSI |
-| Temp. aceite | A2 | 20-140°C | Celsius |
-| Batería | A3 | 0-20V | Volt |
+| Sensor | Pin | Rango | Unidad | Notas |
+|--------|-----|-------|--------|-------|
+| **Temp. aceite (NTC)** | A2 | 20-150°C | Celsius | Con resistencia 10K divisor, lookup table 14 puntos |
+| Batería | A3 | 0-20V | Volt | Opcional: divisor 20K+10K |
+| _Pin libre_ | A0 | - | - | Disponible para expansión |
+| _Pin libre_ | A1 | - | - | Disponible para expansión |
 
 ### Valores desde MegaSquirt 2
-Leídos por protocolo serial (9600 baud):
+Leídos por protocolo serial (9600 baud, MS2 Extra 3.4.4):
 
 | Valor | Label | Rango | Unidad | Descripción |
 |-------|-------|-------|--------|-------------|
+| **Presión aceite** | OIL | 0-150 PSI | PSI | Desde MS2 ADC7 (custom.ini) |
+| **Presión combustible** | FUP | 0-150 PSI | PSI | Desde MS2 ADC6 (custom.ini) |
 | MAP | MAP | -14.5 a 30 PSI | PSI/BAR/kPa | Presión absoluta (boost/vacío) |
 | Air Temp (IAT) | IAT | -10 a 80°C | Celsius | Temperatura aire admisión |
 | Coolant Temp | CLT | 20 a 120°C | Celsius | Temperatura refrigerante |
@@ -548,6 +602,60 @@ Listo! El sistema lo maneja automáticamente.
 * Filtrar señales analógicas si vienen del vano motor
 * Para batería: usar divisor resistivo adecuado (máx 14.5 V)
 * No alimentar desde USB en el auto (usar regulador 12V→5V)
+
+---
+
+## ✅ ESTADO DEL PROYECTO
+
+### Desarrollo: COMPLETO ✅
+- [x] Arquitectura modular implementada
+- [x] Comunicación MS2 Extra 3.4.4
+- [x] Sistema de alertas
+- [x] Lookup table NTC temperatura aceite
+- [x] Presiones desde MS2 (ADC6, ADC7)
+- [x] 6 páginas configuradas
+- [x] Modo test con escenarios
+- [x] Optimización PROGMEM
+
+### Testing: EN PROGRESO 🧪
+- [x] Sensor NTC temperatura: **Funcionando!** (±1-2°C vs termómetro)
+- [ ] Pruebas en banco (fuente 12V)
+- [ ] Comunicación MS2 serial
+- [ ] Presiones de aceite y combustible
+- [ ] Instalación en vehículo
+
+### Próximos Pasos:
+1. ✅ Ensamblar componentes según [ASSEMBLY_GUIDE.md](ASSEMBLY_GUIDE.md)
+2. ✅ Verificar conexiones con [QUICK_REFERENCE.txt](QUICK_REFERENCE.txt)
+3. 🔄 Prueba en banco (fuera del auto)
+4. 🔜 Instalación en vehículo
+5. 🔜 Ajustes finales y calibración
+6. 🔜 Primera salida de prueba
+
+### Hardware Verificado:
+- ✅ Arduino UNO
+- ✅ LCD 16x2 I2C
+- ✅ Step-down 12V → 5V
+- ✅ Sensor NTC temperatura aceite + resistencia 10K
+- ✅ Botones PAGE y PEAK
+- ✅ MS2 Extra 3.4.4 configurado (custom.ini)
+
+---
+
+## 🚗 PARA INSTALAR EN TU AUTO
+
+### Documentación completa disponible:
+Consulta los archivos en la raíz del proyecto para guías detalladas de instalación.
+
+### Resumen de pasos:
+1. **Comprar componentes** → Ver [BOM.md](BOM.md) (~$50-80 USD)
+2. **Ensamblar en banco** → Seguir [ASSEMBLY_GUIDE.md](ASSEMBLY_GUIDE.md)
+3. **Verificar pinout** → Consultar [PINOUT.txt](PINOUT.txt)
+4. **Subir firmware** → Con TEST_MODE = false
+5. **Probar fuera del auto** → Con fuente 12V
+6. **Instalar en vehículo** → Seguir [INSTALLATION_TIPS.md](INSTALLATION_TIPS.md)
+7. **Primera prueba** → Checklist pre-encendido
+8. **Disfrutar!** → 🏁
 
 ---
 
